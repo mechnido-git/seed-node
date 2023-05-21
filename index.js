@@ -25,20 +25,28 @@ const db = getFirestore();
 
 const endpointSecret = process.env.END_SECRET;
 
-const corsOptions ={
-    origin:'http://localhost:3000', 
-    credentials:true,            //access-control-allow-credentials:true
-    optionSuccessStatus:200
-}
+var whitelist = ["http://localhost:3000", "https://gregarious-griffin-da22a3.netlify.app"];
+var corsOptions = {
+  origin: function (origin, callback) {
+    if (whitelist.indexOf(origin) !== -1) {
+      callback(null, true);
+    } else {
+      callback(new Error("Not allowed by CORS"));
+    }
+  },
+  credentials: true, //access-control-allow-credentials:true
+  optionSuccessStatus: 200,
+};
+
 app.use(cors(corsOptions));
 
 const courses = new Map([[0, { items: [20000, 35000, 45000] }]]);
 
-const YOUR_DOMAIN = "http://localhost:4242";
+const YOUR_DOMAIN = "https://gregarious-griffin-da22a3.netlify.app";
 
 const get = async (index, id) => {
   const item = courses.get(index);
-  console.log("id ->"+id);
+  console.log("id ->" + id);
   console.log(index);
   const cityRef = db.collection("courses").doc(index);
   const doc = await cityRef.get();
@@ -47,15 +55,18 @@ const get = async (index, id) => {
   } else {
     console.log("Document data:", doc.data().fee[id].price);
   }
-  return parseInt(doc.data().fee[id].price*100);
+  return parseInt(doc.data().fee[id].price * 100);
 };
 
 const read = async (data) => {
   console.log(data);
-  const course = db.collection('courses').doc(data.courseId);
-   const unionRes = await course.update({
-    enrolled: FieldValue.arrayUnion({userId: data.userId, payRange: data.range})
-   });
+  const course = db.collection("courses").doc(data.courseId);
+  const unionRes = await course.update({
+    enrolled: FieldValue.arrayUnion({
+      userId: data.userId,
+      payRange: data.range,
+    }),
+  });
 };
 
 app.post(
@@ -120,7 +131,7 @@ app.post("/create-checkout-session", async (req, res) => {
       metadata: {
         userId: req.body.userId,
         courseId: req.body.id,
-        range: req.body.range
+        range: req.body.range,
       },
     });
 
@@ -140,8 +151,8 @@ app.post("/create-checkout-session", async (req, res) => {
       ],
       customer: customer.id,
       mode: "payment",
-      success_url: `http://localhost:3000/menu/courses`,
-      cancel_url: `http://localhost:3000?canceled=true`,
+      success_url: `${YOUR_DOMAIN}/menu/courses`,
+      cancel_url: `${YOUR_DOMAIN}/menu/courses`,
     });
     res.status(200).json({ url: session.url });
   } catch (error) {
