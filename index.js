@@ -48,7 +48,8 @@ const get = async (index, id) => {
   const item = courses.get(index);
   console.log("id ->" + id);
   console.log(index);
-  const cityRef = db.collection("courses").doc(index);
+  try {
+    const cityRef = db.collection("courses").doc(index);
   const doc = await cityRef.get();
   if (!doc.exists) {
     console.log("No such document!");
@@ -56,6 +57,9 @@ const get = async (index, id) => {
     console.log("Document data:", doc.data().fee[id].price);
   }
   return parseInt(doc.data().fee[id].price * 100);
+  } catch (error) {
+    console.log(error);
+  }
 };
 
 const read = async (data) => {
