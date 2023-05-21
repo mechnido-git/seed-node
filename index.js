@@ -38,7 +38,7 @@ var corsOptions = {
   optionSuccessStatus: 200,
 };
 
-app.use(cors(corsOptions));
+app.use(cors());
 
 const courses = new Map([[0, { items: [20000, 35000, 45000] }]]);
 
