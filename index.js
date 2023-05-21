@@ -25,7 +25,12 @@ const db = getFirestore();
 
 const endpointSecret = process.env.END_SECRET;
 
-app.use(cors());
+const corsOptions ={
+    origin:'http://localhost:3000', 
+    credentials:true,            //access-control-allow-credentials:true
+    optionSuccessStatus:200
+}
+app.use(cors(corsOptions));
 
 const courses = new Map([[0, { items: [20000, 35000, 45000] }]]);
 
