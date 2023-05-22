@@ -101,6 +101,7 @@ app.post(
     switch (event.type) {
       case "checkout.session.completed":
         console.log("compleate");
+        console.log(event);
         stripe.customers
           .retrieve(event.data.object.customer)
           .then((customer) => {
