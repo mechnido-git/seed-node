@@ -103,8 +103,8 @@ app.post(
           const course = db.collection("courses").doc(customer.metadata.courseId);
           const unionRes = await course.update({
             enrolled: FieldValue.arrayUnion({
-              userId: data.userId,
-              payRange: data.range,
+              userId: customer.metadata.userId,
+              payRange: customer.metadata.range,
             }),
           });
         } catch (error) {
