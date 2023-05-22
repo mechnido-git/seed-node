@@ -64,13 +64,7 @@ const get = async (index, id) => {
 
 const read = async (data) => {
   console.log(data);
-  const course = db.collection("courses").doc(data.courseId);
-  const unionRes = await course.update({
-    enrolled: FieldValue.arrayUnion({
-      userId: data.userId,
-      payRange: data.range,
-    }),
-  });
+
 };
 
 app.post(
@@ -106,6 +100,13 @@ app.post(
         try {
           const customer = await stripe.customers.retrieve(event.data.object.customer)
           console.log(customer);
+          const course = db.collection("courses").doc(customer.metadata.courseId);
+          const unionRes = await course.update({
+            enrolled: FieldValue.arrayUnion({
+              userId: data.userId,
+              payRange: data.range,
+            }),
+          });
         } catch (error) {
           console.log(error);
         }
