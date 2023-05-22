@@ -138,7 +138,7 @@ app.post("/create-checkout-session", async (req, res) => {
         range: req.body.range,
       },
     });
-
+    const amount = await get(req.body.id, req.body.range)
     const session = await stripe.checkout.sessions.create({
       line_items: [
         {
@@ -147,7 +147,7 @@ app.post("/create-checkout-session", async (req, res) => {
             product_data: {
               name: req.body.name,
             },
-            unit_amount: await get(req.body.id, req.body.range),
+            unit_amount: amount,
           },
           // Provide the exact Price ID (for example, pr_1234) of the product you want to sell
           quantity: 1,
