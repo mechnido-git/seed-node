@@ -78,6 +78,7 @@ app.post(
   express.raw({ type: "application/json" }),
   (request, response) => {
     let event = request.body;
+    console.log(event);
     let data;
     // Only verify the event if you have an endpoint secret defined.
     // Otherwise use the basic event deserialized with JSON.parse
@@ -101,7 +102,7 @@ app.post(
     switch (event.type) {
       case "checkout.session.completed":
         console.log("compleate");
-        console.log(event);
+        console.log(event.data.object.customer);
         stripe.customers
           .retrieve(event.data.object.customer)
           .then((customer) => {
