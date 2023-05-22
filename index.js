@@ -105,10 +105,14 @@ app.post(
         stripe.customers
           .retrieve(event.data.object.customer)
           .then((customer) => {
+            console.log('hell');
             console.log(customer);
             read(customer.metadata);
           })
-          .catch((err) => console.log(err));
+          .catch((err) =>{
+            console.log('hoi');
+            console.log(err)
+          });
         //console.log(event.data);
         // Then define and call a method to handle the successful payment intent.
         // handlePaymentIntentSucceeded(paymentIntent);
