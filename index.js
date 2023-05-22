@@ -76,7 +76,7 @@ const read = async (data) => {
 app.post(
   "/webhook",
   express.raw({ type: "application/json" }),
-  (request, response) => {
+  async (request, response) => {
     let event = request.body;
     console.log(event);
     let data;
@@ -103,17 +103,12 @@ app.post(
       case "checkout.session.completed":
         console.log("compleate");
         console.log(event.data.object.customer);
-        stripe.customers
-          .retrieve(event.data.object.customer)
-          .then((customer) => {
-            console.log('hell');
-            console.log(customer);
-            read(customer.metadata);
-          })
-          .catch((err) =>{
-            console.log('hoi');
-            console.log(err)
-          });
+        try {
+          const customer = await stripe.customers.retrieve(event.data.object.customer)
+          console.log(customer);
+        } catch (error) {
+          console.log(error);
+        }
         //console.log(event.data);
         // Then define and call a method to handle the successful payment intent.
         // handlePaymentIntentSucceeded(paymentIntent);
