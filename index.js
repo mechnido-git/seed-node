@@ -6,6 +6,7 @@ const express = require("express");
 const app = express();
 const cors = require("cors");
 const serviceAC = require("./cert.json");
+var crypto = require("crypto");
 
 const {
   initializeApp,
@@ -25,24 +26,24 @@ const db = getFirestore();
 
 const endpointSecret = process.env.END_SECRET;
 
-var whitelist = ["http://localhost:3000", "https://gregarious-griffin-da22a3.netlify.app"];
-var corsOptions = {
-  origin: function (origin, callback) {
-    if (whitelist.indexOf(origin) !== -1) {
-      callback(null, true);
-    } else {
-      callback(new Error("Not allowed by CORS"));
-    }
-  },
-  credentials: true, //access-control-allow-credentials:true
-  optionSuccessStatus: 200,
-};
+// var whitelist = ["http://localhost:3000", "https://gregarious-griffin-da22a3.netlify.app"];
+// var corsOptions = {
+//   origin: function (origin, callback) {
+//     if (whitelist.indexOf(origin) !== -1) {
+//       callback(null, true);
+//     } else {
+//       callback(new Error("Not allowed by CORS"));
+//     }
+//   },
+//   credentials: true, //access-control-allow-credentials:true
+//   optionSuccessStatus: 200,
+// };
 
 app.use(cors());
 
 const courses = new Map([[0, { items: [20000, 35000, 45000] }]]);
 
-const YOUR_DOMAIN = "https://gregarious-griffin-da22a3.netlify.app";
+const YOUR_DOMAIN = "http://localhost:3000";
 
 const get = async (index, id) => {
   const item = courses.get(index);
@@ -50,121 +51,72 @@ const get = async (index, id) => {
   console.log(index);
   try {
     const cityRef = db.collection("courses").doc(index);
-  const doc = await cityRef.get();
-  if (!doc.exists) {
-    console.log("No such document!");
-  } else {
-    console.log("Document data:", doc.data().fee[id].price);
-  }
-  return parseInt(doc.data().fee[id].price * 100);
+    const doc = await cityRef.get();
+    if (!doc.exists) {
+      console.log("No such document!");
+    } else {
+      console.log("Document data:", doc.data().fee[id].price);
+    }
+    return parseInt(doc.data().fee[id].price * 100);
   } catch (error) {
     console.log(error);
   }
 };
 
-const read = async (data) => {
-  console.log(data);
-
-};
-
-app.post(
-  "/webhook",
-  express.raw({ type: "application/json" }),
-  async (request, response) => {
-    let event = request.body;
-    console.log(event);
-    let data;
-    // Only verify the event if you have an endpoint secret defined.
-    // Otherwise use the basic event deserialized with JSON.parse
-    if (endpointSecret) {
-      // Get the signature sent by Stripe
-      const signature = request.headers["stripe-signature"];
-      try {
-        event = stripe.webhooks.constructEvent(
-          request.body,
-          signature,
-          endpointSecret
-        );
-      } catch (err) {
-        console.log(`⚠️  Webhook signature verification failed.`, err.message);
-        return response.sendStatus(400);
-      }
-      // data = request.body.data.object;
-    }
-
-    // Handle the event
-    switch (event.type) {
-      case "checkout.session.completed":
-        console.log("compleate");
-        console.log(event.data.object.customer);
-        try {
-          const customer = await stripe.customers.retrieve(event.data.object.customer)
-          console.log(customer);
-          const course = db.collection("courses").doc(customer.metadata.courseId);
-          const unionRes = await course.update({
-            enrolled: FieldValue.arrayUnion({
-              userId: customer.metadata.userId,
-              payRange: customer.metadata.range,
-            }),
-          });
-        } catch (error) {
-          console.log(error);
-        }
-        //console.log(event.data);
-        // Then define and call a method to handle the successful payment intent.
-        // handlePaymentIntentSucceeded(paymentIntent);
-        break;
-      case "payment_method.attached":
-        const paymentMethod = event.data.object;
-        // Then define and call a method to handle the successful attachment of a PaymentMethod.
-        // handlePaymentMethodAttached(paymentMethod);
-        break;
-      default:
-        // Unexpected event type
-        console.log(`Unhandled event type ${event.type}.`);
-    }
-
-    // Return a 200 response to acknowledge receipt of the event
-    response.send();
-  }
-);
-
 app.use(express.json());
 
-app.post("/create-checkout-session", async (req, res) => {
+app.post("/order", async (req, res) => {
   try {
-    const customer = await stripe.customers.create({
-      metadata: {
-        userId: req.body.userId,
-        courseId: req.body.id,
-        range: req.body.range,
-      },
+    const Razorpay = require("razorpay");
+    var instance = new Razorpay({
+      key_id: "rzp_test_NWomFOohCdnvuS",
+      key_secret: "6VEmG14FummMq3riQwcR48Hk",
     });
-    const amount = await get(req.body.id, req.body.range)
-    const session = await stripe.checkout.sessions.create({
-      line_items: [
-        {
-          price_data: {
-            currency: "inr",
-            product_data: {
-              name: req.body.name,
-            },
-            unit_amount: amount,
-          },
-          // Provide the exact Price ID (for example, pr_1234) of the product you want to sell
-          quantity: 1,
-        },
-      ],
-      customer: customer.id,
-      mode: "payment",
-      success_url: `${YOUR_DOMAIN}/menu/courses`,
-      cancel_url: `${YOUR_DOMAIN}/menu/courses`,
+
+    const amount = await get(req.body.id, req.body.range);
+
+    var options = {
+      amount: amount, // amount in the smallest currency unit
+      currency: "INR",
+    };
+    instance.orders.create(options, function (err, order) {
+      if (err) return res.status(500).json({ error: err });
+
+      return res.status(200).json({ order });
     });
-    res.status(200).json({ url: session.url });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
   //res.redirect(303, session.url);
+});
+
+app.post("/verify", async (req, res) => {
+  let body =
+    req.body.response.razorpay_order_id +
+    "|" +
+    req.body.response.razorpay_payment_id;
+    console.log(req.body);
+
+  var expectedSignature = crypto
+    .createHmac("sha256", "6VEmG14FummMq3riQwcR48Hk")
+    .update(body.toString())
+    .digest("hex");
+  var response = { signatureIsValid: "false" };
+  if (expectedSignature === req.body.response.razorpay_signature){
+    try {
+      const course = db.collection("courses").doc(req.body.courseId);
+    const unionRes = await course.update({
+      enrolled: FieldValue.arrayUnion({
+        userId: req.body.userId,
+        payRange: req.body.range,
+      }),
+    });
+    response = { signatureIsValid: "true" };
+    } catch (error) {
+      console.log(error);
+    }
+  }
+  res.json({response});
 });
 
 app.listen(4242, () => console.log("Running on port 4242"));
