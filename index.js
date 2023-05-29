@@ -8,6 +8,12 @@ const cors = require("cors");
 const serviceAC = require("./cert.json");
 var crypto = require("crypto");
 
+const shortId = require('shortid');
+const path = require('path');
+
+const { generateInvoicePdf } = require("./utils/pdf-generator");
+const { sendGmail } = require("./utils/email-sender");
+
 const {
   initializeApp,
   applicationDefault,
@@ -20,6 +26,12 @@ const {
 } = require("firebase-admin/firestore");
 initializeApp({
   credential: cert(serviceAC),
+});
+
+const Razorpay = require("razorpay");
+var instance = new Razorpay({
+  key_id: "rzp_test_NWomFOohCdnvuS",
+  key_secret: "6VEmG14FummMq3riQwcR48Hk",
 });
 
 const db = getFirestore();
@@ -67,11 +79,7 @@ app.use(express.json());
 
 app.post("/order", async (req, res) => {
   try {
-    const Razorpay = require("razorpay");
-    var instance = new Razorpay({
-      key_id: "rzp_test_NWomFOohCdnvuS",
-      key_secret: "6VEmG14FummMq3riQwcR48Hk",
-    });
+
 
     const amount = await get(req.body.id, req.body.range);
 
@@ -111,6 +119,70 @@ app.post("/verify", async (req, res) => {
         payRange: req.body.range,
       }),
     });
+
+    const payment = await instance.payments.fetch(req.body.response.razorpay_payment_id)
+    const order = await instance.orders.fetch(req.body.response.razorpay_order_id)
+    console.log({...payment});
+    console.log({...order});
+    const clientId = req.body.userId
+    const destinationEmail = req.body.email;
+
+    const invoiceId = shortId.generate();
+    const invoiceNumber = 'FACT-' + invoiceId + '-' + req.body.response.razorpay_payment_id;
+
+    const fileName = invoiceNumber + '.pdf'
+        const filePath = path.join(__dirname, `./containers/${fileName}`);
+        const client = {
+          name: req.body.userName,
+          email: req.body.email,
+          clientId: req.body.uid,
+          pricePerSession: 1,
+          address: "",
+          city: "",
+          state: "",
+          postal_code: ""
+        }
+        const invoiceDetails = { client, items: [{item: req.body.item, quantity: 1, amountSum: order.amount/100, subtotal: order.amount/100}], invoiceNumber, paid: order.amount/100, subtotal: order.amount/100 };
+
+        generateInvoicePdf(invoiceDetails, filePath);
+
+        const files = [filePath];
+
+        await sendGmail(
+          destinationEmail,
+          `
+          <!-- HTML Codes by Quackit.com -->
+          <!DOCTYPE html>
+          <title>Text Example</title>
+          <style>
+          div.container {
+          background-color: #ffffff;
+          }
+          div.container p {
+          font-family: Arial;
+          font-size: 14px;
+          font-style: normal;
+          font-weight: normal;
+          text-decoration: none;
+          text-transform: none;
+          color: #000000;
+          background-color: #ffffff;
+          }
+          </style>
+
+          <div class="container">
+          <p>Hello,</p>
+          <p></p>
+          <p>I hope everything is good from your side. As per our session no. <b>${invoiceNumber}</b> , please find below the invoice.</p>
+          <p>Thanks.</p>
+          <p><b>Note -> This is an automatic email.</b>
+          </div>
+          
+          `,
+          `Invoice: ${invoiceNumber}`,
+          files
+      )
+
     response = { signatureIsValid: "true" };
     } catch (error) {
       console.log(error);

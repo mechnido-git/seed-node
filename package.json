@@ -16,8 +16,11 @@
     "express": "^4.18.2",
     "firebase-admin": "10.3",
     "firebase-functions": "^4.4.0",
+    "gmail-send": "^1.8.14",
     "json": "^11.0.0",
+    "pdfkit": "^0.13.0",
     "razorpay": "^2.8.6",
+    "shortid": "^2.2.16",
     "stripe": "^12.5.0"
   },
   "devDependencies": {
