@@ -111,13 +111,13 @@ app.post("/verify", async (req, res) => {
   var response = { signatureIsValid: "false" };
   if (expectedSignature === req.body.response.razorpay_signature){
     try {
-    //   const course = db.collection("courses").doc(req.body.courseId);
-    // const unionRes = await course.update({
-    //   enrolled: FieldValue.arrayUnion({
-    //     userId: req.body.userId,
-    //     payRange: req.body.range,
-    //   }),
-    // });
+      const course = db.collection("courses").doc(req.body.courseId);
+    const unionRes = await course.update({
+      enrolled: FieldValue.arrayUnion({
+        userId: req.body.userId,
+        payRange: req.body.range,
+      }),
+    });
 
     const payment = await instance.payments.fetch(req.body.response.razorpay_payment_id)
     const order = await instance.orders.fetch(req.body.response.razorpay_order_id)
