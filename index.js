@@ -79,7 +79,7 @@ app.use(express.json());
 
 app.post("/order", async (req, res) => {
   try {
-
+    res.header("Access-Control-Allow-Origin", "*");
 
     const amount = await get(req.body.id, req.body.range);
 
