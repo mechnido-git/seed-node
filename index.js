@@ -1,7 +1,6 @@
 // This is your test secret API key.
 
 require("dotenv").config();
-const stripe = require("stripe")(process.env.STRIPE_KEY);
 const express = require("express");
 const app = express();
 const cors = require("cors");
@@ -10,6 +9,7 @@ var crypto = require("crypto");
 
 const shortId = require('shortid');
 const path = require('path');
+
 
 const { generateInvoicePdf } = require("./utils/pdf-generator");
 const { sendGmail } = require("./utils/email-sender");
@@ -112,13 +112,13 @@ app.post("/verify", async (req, res) => {
   var response = { signatureIsValid: "false" };
   if (expectedSignature === req.body.response.razorpay_signature){
     try {
-      const course = db.collection("courses").doc(req.body.courseId);
-    const unionRes = await course.update({
-      enrolled: FieldValue.arrayUnion({
-        userId: req.body.userId,
-        payRange: req.body.range,
-      }),
-    });
+    //   const course = db.collection("courses").doc(req.body.courseId);
+    // const unionRes = await course.update({
+    //   enrolled: FieldValue.arrayUnion({
+    //     userId: req.body.userId,
+    //     payRange: req.body.range,
+    //   }),
+    // });
 
     const payment = await instance.payments.fetch(req.body.response.razorpay_payment_id)
     const order = await instance.orders.fetch(req.body.response.razorpay_order_id)
@@ -131,7 +131,7 @@ app.post("/verify", async (req, res) => {
     const invoiceNumber = 'FACT-' + invoiceId + '-' + req.body.response.razorpay_payment_id;
 
     const fileName = invoiceNumber + '.pdf'
-        const filePath = path.join(__dirname, `./containers/${fileName}`);
+        const filePath = `/tmp/${fileName}`;
         const client = {
           name: req.body.userName,
           email: req.body.email,
@@ -147,6 +147,9 @@ app.post("/verify", async (req, res) => {
         generateInvoicePdf(invoiceDetails, filePath);
 
         const files = [filePath];
+
+        // const pdf = [`https://cyclic-grumpy-puce-frog-us-east-1.s3.amazonaws.com/some_files/${invoiceNumber}.pdf`]
+        // console.log(pdf);
 
         await sendGmail(
           destinationEmail,
