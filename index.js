@@ -36,7 +36,6 @@ var instance = new Razorpay({
 
 const db = getFirestore();
 
-const endpointSecret = process.env.END_SECRET;
 
 // var whitelist = ["http://localhost:3000", "https://gregarious-griffin-da22a3.netlify.app"];
 // var corsOptions = {
@@ -79,7 +78,7 @@ app.use(express.json());
 
 app.post("/order", async (req, res) => {
   try {
-    res.header("Access-Control-Allow-Origin", "*");
+    //res.header("Access-Control-Allow-Origin", "*");
 
     const amount = await get(req.body.id, req.body.range);
 
