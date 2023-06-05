@@ -119,6 +119,10 @@ app.post("/verify", async (req, res) => {
       }),
     });
 
+    await course.update({
+      enrolled_arr: FieldValue.arrayUnion(userId),
+    });
+
     const payment = await instance.payments.fetch(req.body.response.razorpay_payment_id)
     const order = await instance.orders.fetch(req.body.response.razorpay_order_id)
     console.log({...payment});
