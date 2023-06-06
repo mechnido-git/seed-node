@@ -120,7 +120,7 @@ app.post("/verify", async (req, res) => {
     });
 
     await course.update({
-      enrolled_arr: FieldValue.arrayUnion(userId),
+      enrolled_arr: FieldValue.arrayUnion(req.body.userId),
     });
 
     const payment = await instance.payments.fetch(req.body.response.razorpay_payment_id)
