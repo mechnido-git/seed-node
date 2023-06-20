@@ -197,4 +197,55 @@ app.post("/verify", async (req, res) => {
   res.json({response});
 });
 
+app.post("/event/email", async(req, res) => {
+  const id = req.body.eventId;
+  console.log(req);
+  try {
+    const cityRef = db.collection('events').doc(id);
+    const doc = await cityRef.get();
+    if (!doc.exists) {
+      console.log('No such document!');
+      res.status(500).json({error: 'No such document!'})
+    } else {
+      console.log('Document data:', doc.data());
+      const data = doc.data()
+      await sendGmail(
+        req.body.email,
+        `
+        <!-- HTML Codes by Quackit.com -->
+        <!DOCTYPE html>
+        <title>Text Example</title>
+        <style>
+        div.container {
+        background-color: #ffffff;
+        }
+        div.container p {
+        font-family: Arial;
+        font-size: 14px;
+        font-style: normal;
+        font-weight: normal;
+        text-decoration: none;
+        text-transform: none;
+        color: #000000;
+        background-color: #ffffff;
+        }
+        </style>
+
+        <div class="container">
+        <p>Hello, ${req.body.name}</p>
+        <p>Your Team ${req.body.teamName} successfully registered to event ${data.name}</p>
+        <p>Thanks.</p>
+        <p><b>Note -> This is an automatic email.</b>
+        </div>
+        
+        `,
+        `Registration success`,
+    )
+    res.status(200).json({ok:"ok"})
+    }
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({error})
+  }
+})
 app.listen(4242, () => console.log("Running on port 4242"));
