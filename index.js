@@ -30,8 +30,8 @@ initializeApp({
 
 const Razorpay = require("razorpay");
 var instance = new Razorpay({
-  key_id: "rzp_test_NWomFOohCdnvuS",
-  key_secret: "6VEmG14FummMq3riQwcR48Hk",
+  key_id: process.env.RAZOR_ID,
+  key_secret: process.env.RAZOR_SECRET,
 });
 
 const db = getFirestore();
