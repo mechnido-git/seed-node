@@ -81,6 +81,7 @@ app.post("/order", async (req, res) => {
     //res.header("Access-Control-Allow-Origin", "*");
 
     const amount = await get(req.body.id, req.body.range);
+    console.log(amount);
 
     var options = {
       amount: amount, // amount in the smallest currency unit
@@ -105,7 +106,7 @@ app.post("/verify", async (req, res) => {
     console.log(req.body);
 
   var expectedSignature = crypto
-    .createHmac("sha256", "6VEmG14FummMq3riQwcR48Hk")
+    .createHmac("sha256", process.env.RAZOR_SECRET)
     .update(body.toString())
     .digest("hex");
   var response = { signatureIsValid: "false" };
