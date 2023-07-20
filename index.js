@@ -124,11 +124,6 @@ app.post("/verify", async (req, res) => {
   var response = { signatureIsValid: "false" };
   if (expectedSignature === req.body.response.razorpay_signature){
     try {
-      const course = doc(db, 'courses', req.body.courseId);
-    const unionRes = await updateDoc(course, { enrolled: arrayUnion({ userId: req.body.userId, payRange: req.body.range,}), });
-    await updateDoc(course, {
-      enrolled_arr: arrayUnion(req.body.userId),
-    });
     
     const payment = await instance.payments.fetch(req.body.response.razorpay_payment_id)
     const order = await instance.orders.fetch(req.body.response.razorpay_order_id)
@@ -159,16 +154,17 @@ app.post("/verify", async (req, res) => {
 
         async function after(){
           try {
+
             const storageRef = ref(storage, `invoices/${req.body.response.razorpay_payment_id}/${fileName}`);
             const file = fs.readFileSync(filePath, "base64")
             uploadString(storageRef, file, 'base64').then((snapshot) => {
               console.log('Uploaded a base64 string!');
-              getDownloadURL(snapshot.ref).then((downloadURL) => {
+              getDownloadURL(snapshot.ref).then(async(downloadURL) => {
                 console.log('File available at', downloadURL);
-                update(db, order, downloadURL)
+                await update(db, order, downloadURL)
               });
             });
-    
+
             async function update (db, order, downloadURL) {
               await addDoc(collection(db, 'payments'), {
                 amount: order.amount/100,
@@ -180,6 +176,11 @@ app.post("/verify", async (req, res) => {
                 userId: req.body.userId,
                 userName: req.body.userName,
                 timestamp: serverTimestamp()
+              });
+              const course = doc(db, 'courses', req.body.courseId);
+              const unionRes = await updateDoc(course, { enrolled: arrayUnion({ userId: req.body.userId, payRange: req.body.range, invoice: downloadURL}), });
+              await updateDoc(course, {
+                enrolled_arr: arrayUnion(req.body.userId),
               });
             } 
     
