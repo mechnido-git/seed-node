@@ -14,10 +14,6 @@ const path = require('path');
 const { generateInvoicePdf } = require("./utils/pdf-generator");
 const { sendGmail } = require("./utils/email-sender");
 
-//const { initializeApp, applicationDefault, cert } = require("firebase-admin/app");
-//const { getStorage, ref, uploadBytesResumable, getDownloadURL } = require('firebase-admin/storage');
-//const { getFirestore, Timestamp, FieldValue } = require("firebase-admin/firestore");
-
 const { initializeApp } = require('firebase/app');
 const {firebaseConfig} = require('./config')
 const { doc, updateDoc, getFirestore , collection, addDoc, getDoc, arrayUnion, serverTimestamp} = require("firebase/firestore")
@@ -27,11 +23,6 @@ initializeApp(firebaseConfig)
 const { getStorage, ref, uploadBytesResumable, getDownloadURL, uploadString } = require("firebase/storage");
 
 const storage = getStorage();
-
-// initializeApp({
-//   credential: cert(serviceAC),
-//   storageBucket: 'gs://seed-25898.appspot.com'
-// });
 
 const Razorpay = require("razorpay");
 var instance = new Razorpay({
@@ -82,10 +73,6 @@ const get = async (index, id) => {
 
 app.use(express.json());
 
-
-app.get("/upload", async(req, res)=>{
-
-})
 
 app.post("/order", async (req, res) => {
   try {
