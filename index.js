@@ -4,7 +4,6 @@ require("dotenv").config();
 const express = require("express");
 const app = express();
 const cors = require("cors");
-const serviceAC = require("./cert.json");
 var crypto = require("crypto");
 
 const shortId = require('shortid');
