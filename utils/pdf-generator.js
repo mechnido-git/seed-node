@@ -3,7 +3,7 @@ const PDFDocument = require("pdfkit");
 const pt = require("path")
 
 
-async function generateInvoicePdf(invoice, path, done) {
+async function generateInvoicePdf(invoice, path, done, res) {
     let doc = new PDFDocument({ size: "A4", margin: 50 });
 
     console.log(invoice);
@@ -15,9 +15,10 @@ async function generateInvoicePdf(invoice, path, done) {
 
     doc.pipe(outStream);
     doc.end();
-        outStream.on('finish', async()=>{
-            console.log("finished");
-            await done()
+        outStream.on('finish', ()=>{
+            console.log("finis");
+            done(res)
+            
         })
 }
 

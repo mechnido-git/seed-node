@@ -136,9 +136,9 @@ app.post("/verify", async (req, res) => {
         }
         const invoiceDetails = { client, items: [{item: req.body.item, quantity: 1, amountSum: order.amount/100, subtotal: order.amount/100}], invoiceNumber, paid: order.amount/100, subtotal: order.amount/100 };
 
-        await generateInvoicePdf(invoiceDetails, filePath, after);
+        await generateInvoicePdf(invoiceDetails, filePath, after, res);
 
-        async function after(){
+        async function after(res){
           try {
 
             const storageRef = ref(storage, `invoices/${req.body.response.razorpay_payment_id}/${fileName}`);
@@ -147,11 +147,11 @@ app.post("/verify", async (req, res) => {
               console.log('Uploaded a base64 string!');
               getDownloadURL(snapshot.ref).then(async(downloadURL) => {
                 console.log('File available at', downloadURL);
-                await update(db, order, downloadURL)
+                await update(db, order, downloadURL, res)
               });
             });
 
-            async function update (db, order, downloadURL) {
+            async function update (db, order, downloadURL, res) {
               await addDoc(collection(db, 'payments'), {
                 amount: order.amount/100,
                 invoice: downloadURL,
@@ -168,8 +168,10 @@ app.post("/verify", async (req, res) => {
               await updateDoc(course, {
                 enrolled_arr: arrayUnion(req.body.userId),
               });
+              response = { signatureIsValid: "true" };
+              res.json({response});
             } 
-    
+
             const files = [filePath];
     
             // const pdf = [`https://cyclic-grumpy-puce-frog-us-east-1.s3.amazonaws.com/some_files/${invoiceNumber}.pdf`]
@@ -210,7 +212,6 @@ app.post("/verify", async (req, res) => {
               files
           )
     
-        response = { signatureIsValid: "true" };
           } catch (error) {
             console.log(error);
             res.status(500).json({error});
@@ -222,7 +223,6 @@ app.post("/verify", async (req, res) => {
       res.status(500).json({error});
     }
   }
-  res.json({response});
 });
 
 app.post("/event/email", async(req, res) => {
