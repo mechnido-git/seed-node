@@ -1,28 +1,24 @@
 const fs = require("fs");
 const PDFDocument = require("pdfkit");
-// const AWS = require("aws-sdk");
-// // const s3 = new AWS.S3()
+const pt = require("path")
 
 
-async function generateInvoicePdf(invoice, path) {
+async function generateInvoicePdf(invoice, path, done) {
     let doc = new PDFDocument({ size: "A4", margin: 50 });
 
-
+    console.log(invoice);
     generateHeader(doc);
     generateCustomerInformation(doc, invoice);
     generateInvoiceTable(doc, invoice);
 
+    const outStream = fs.createWriteStream(path)
+
+    doc.pipe(outStream);
     doc.end();
-    doc.pipe(fs.createWriteStream(path));
-
-
-
-//    await s3.putObject({
-//     Body: doc,
-//     Bucket: "cyclic-grumpy-puce-frog-us-east-1",
-//     Key: `some_files/${invoice.invoiceNumber}.pdf`,
-//     contentType : 'application/pdf'
-// }).promise()
+        outStream.on('finish', async()=>{
+            console.log("finished");
+            await done()
+        })
 }
 
 function generateHeader(doc) {
