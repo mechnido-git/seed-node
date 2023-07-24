@@ -24,13 +24,13 @@ async function generateInvoicePdf(invoice, path, done, res) {
 
 function generateHeader(doc) {
     doc
-        .image("logo.png", 50, 45, { width: 50 })
+        .image("logo.png", 50, 45, { width: 80 })
         .fillColor("#444444")
-        .fontSize(20)
-        .text("Idea", 110, 57)
-        .fontSize(10)
-        // .text("Bretigny-Sur-Orges 91220", 200, 65, { align: "right" })
-        // .text("France", 200, 80, { align: "right" })
+        // .fontSize(20)
+        // .text("Idea", 110, 57)
+        // .fontSize(10)
+        // // .text("Bretigny-Sur-Orges 91220", 200, 65, { align: "right" })
+        // // .text("France", 200, 80, { align: "right" })
         .moveDown();
 }
 

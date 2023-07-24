@@ -222,6 +222,8 @@ app.post("/verify", async (req, res) => {
       console.log(error);
       res.status(500).json({error});
     }
+  }else{
+    res.status(500).json({error: "signature Error"});
   }
 });
 
@@ -276,4 +278,186 @@ app.post("/event/email", async(req, res) => {
     res.status(500).json({error})
   }
 })
+
+const getRegisterFee =  async (id) => {
+  try {
+    const cityRef = doc(db, 'events', id);
+    const docSnap = await getDoc(cityRef)
+    if (!docSnap.exists) {
+      console.log("No such document!");
+    } else {
+      console.log("Document data:", docSnap.data().fee);
+    }
+    return parseInt(docSnap.data().fee * 100);
+  } catch (error) {
+    console.log(error);
+  }
+}
+
+app.post("/register", async(req, res)=>{
+  console.log(req.body.id);
+  try {
+    const fee = await getRegisterFee(req.body.id)
+    console.log(fee / 100);
+
+    var options = {
+      amount: fee, // amount in the smallest currency unit
+      currency: "INR",
+    };
+    instance.orders.create(options, function (err, order) {
+      if (err){
+        console.log(err);
+        return res.status(500).json({ error: err });
+      }
+
+      return res.status(200).json({ order });
+    });
+    
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json({ error });
+  }
+  
+})
+
+app.post("/register-verify", async (req, res) => {
+  let body =
+    req.body.response.razorpay_order_id +
+    "|" +
+    req.body.response.razorpay_payment_id;
+    console.log(req.body);
+
+  var expectedSignature = crypto
+    .createHmac("sha256", process.env.RAZOR_SECRET)
+    .update(body.toString())
+    .digest("hex");
+  var response = { signatureIsValid: "false" };
+
+  if (expectedSignature === req.body.response.razorpay_signature){
+    try {
+      
+      const payment = await instance.payments.fetch(req.body.response.razorpay_payment_id)
+      const order = await instance.orders.fetch(req.body.response.razorpay_order_id)
+  
+      console.log({...payment});
+      console.log({...order});
+      const destinationEmail = req.body.email;
+  
+      const invoiceId = shortId.generate();
+      const invoiceNumber = 'FACT-' + invoiceId + '-' + req.body.response.razorpay_payment_id;
+  
+      const fileName = invoiceNumber + '.pdf'
+          const filePath = `/tmp/${fileName}`;
+          const client = {
+            name: req.body.userName,
+            email: req.body.email,
+            clientId: req.body.userId,
+            pricePerSession: 1,
+            address: "",
+            city: "",
+            state: "",
+            postal_code: ""
+          }
+
+          const invoiceDetails = { client, items: [{item: req.body.item, quantity: 1, amountSum: order.amount/100, subtotal: order.amount/100}], invoiceNumber, paid: order.amount/100, subtotal: order.amount/100 };
+
+        await generateInvoicePdf(invoiceDetails, filePath, after, res);
+
+        async function after(res){
+          try {
+
+            const storageRef = ref(storage, `invoices/${req.body.response.razorpay_payment_id}/${fileName}`);
+            const file = fs.readFileSync(filePath, "base64")
+            uploadString(storageRef, file, 'base64').then((snapshot) => {
+              console.log('Uploaded a base64 string!');
+              getDownloadURL(snapshot.ref).then(async(downloadURL) => {
+                console.log('File available at', downloadURL);
+                await update(db, order, downloadURL, res)
+              });
+            });
+
+            async function update (db, order, downloadURL, res) {
+              await addDoc(collection(db, 'payments'), {
+                amount: order.amount/100,
+                invoice: downloadURL,
+                item: 'event',
+                itemName: req.body.item,
+                razorId: req.body.response.razorpay_payment_id,
+                satus: 'purchased',
+                userId: req.body.userId,
+                userName: req.body.userName,
+                timestamp: serverTimestamp()
+              });
+              const event = doc(db, 'events', req.body.eventId);
+              const unionRes = await updateDoc(event, { enrolled: arrayUnion({ userId: req.body.userId, payRange: req.body.range? req.body.range : "", invoice: downloadURL}), });
+              await updateDoc(event, {
+                enrolled_arr: arrayUnion(req.body.userId),
+              });
+
+              await addDoc(collection(db, 'enrolled'), {
+                ...req.body.eventData
+              })
+
+              response = { signatureIsValid: "true" };
+              res.json({response});
+            } 
+
+            const files = [filePath];
+    
+            // const pdf = [`https://cyclic-grumpy-puce-frog-us-east-1.s3.amazonaws.com/some_files/${invoiceNumber}.pdf`]
+            // console.log(pdf);
+    
+            await sendGmail(
+              destinationEmail,
+              `
+              <!-- HTML Codes by Quackit.com -->
+              <!DOCTYPE html>
+              <title>Text Example</title>
+              <style>
+              div.container {
+              background-color: #ffffff;
+              }
+              div.container p {
+              font-family: Arial;
+              font-size: 14px;
+              font-style: normal;
+              font-weight: normal;
+              text-decoration: none;
+              text-transform: none;
+              color: #000000;
+              background-color: #ffffff;
+              }
+              </style>
+    
+              <div class="container">
+              <p>Hello,</p>
+              <p></p>
+              <p>I hope everything is good from your side. As per our session no. <b>${invoiceNumber}</b> , please find below the invoice.</p>
+              <p>Thanks.</p>
+              <p><b>Note -> This is an automatic email.</b>
+              </div>
+              
+              `,
+              `Invoice: ${invoiceNumber}`,
+              files
+          )
+    
+          } catch (error) {
+            console.log(error);
+            res.status(500).json({error});
+          }
+        }
+
+    } catch (error) {
+      res.status(500).json({error: "signature not valid"})
+    }
+
+    
+
+  }else{
+    res.json({error: "signature not valid"})
+  }
+  
+})
+
 app.listen(4242, () => console.log("Running on port 4242"));

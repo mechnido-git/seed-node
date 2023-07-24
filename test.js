@@ -44,9 +44,11 @@ const foo = async ()=>{
           paid: 2500,
           subtotal: 2500
         }
+        const lol = 'ui'
 
-        const msg = await generateInvoicePdf(invoiceDetails, filePath);
-        await msg()
+        const msg = await generateInvoicePdf(invoiceDetails, filePath, after, lol);
+        async function after(wow){
+        }
         console.log("ji");
         // const file = fs.readFileSync(filePath, "base64")
         // console.log(file);
