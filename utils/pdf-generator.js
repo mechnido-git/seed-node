@@ -24,10 +24,11 @@ async function generateInvoicePdf(invoice, path, done, res) {
 
 function generateHeader(doc) {
     doc
-        .image("logo.png", 50, 45, { width: 80 })
+        .image("logo.png", 50, 45, { width: 200 })
         .fillColor("#444444")
-        // .fontSize(20)
-        // .text("Idea", 110, 57)
+        .fontSize(30)
+        .font("Helvetica-Bold")
+        .text("Invoice", 440, 55)
         // .fontSize(10)
         // // .text("Bretigny-Sur-Orges 91220", 200, 65, { align: "right" })
         // // .text("France", 200, 80, { align: "right" })
@@ -35,14 +36,8 @@ function generateHeader(doc) {
 }
 
 function generateCustomerInformation(doc, invoice) {
-    doc
-        .fillColor("#444444")
-        .fontSize(20)
-        .text("Invoice", 50, 160);
 
-    generateHr(doc, 185);
-
-    const customerInformationTop = 200;
+    const customerInformationTop = 150;
 
     doc
         .fontSize(10)
@@ -58,9 +53,10 @@ function generateCustomerInformation(doc, invoice) {
             150,
             customerInformationTop + 30
         )
-        .text("Name:", 50, customerInformationTop + 45)
-         .font("Helvetica-Bold")
-        .text(invoice.client.name, 150, customerInformationTop + 45)
+        .image("mech_logo.png", 450, 120, { width: 120 })
+        // .text("Name:", 50, customerInformationTop + 45)
+        //  .font("Helvetica-Bold")
+        // .text(invoice.client.name, 150, customerInformationTop + 45)
         // .font("Helvetica")
         // .text(invoice.client.address, 300, customerInformationTop + 15)
         // .text(
@@ -74,7 +70,23 @@ function generateCustomerInformation(doc, invoice) {
         // )
         .moveDown();
 
-    generateHr(doc, 262);
+    generateHr(doc, 200);
+    doc
+        .fontSize(10)
+        .font("Helvetica-Bold")
+        .text("Recipient details:", 50, 210)
+        .font("Helvetica")
+        .text(invoice.client.name, 50, 225)
+        .text(invoice.client.email, 50, 240)
+        .font("Helvetica-Bold")
+        .text("MECHNIDO", 490, 210)
+        .font("Helvetica")
+        .text("Coimbatore", 490, 225)
+        .text("GSTIN No: 33ABKFM0821E1ZQ", 400, 240)
+        .text("PAN No: ABKFM0821E", 440, 255)
+        .text("Mail : support@mseed.in", 432, 270)
+
+        generateHr(doc, 290);
 }
 
 function generateInvoiceTable(doc, invoice) {
