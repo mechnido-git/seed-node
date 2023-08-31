@@ -288,7 +288,7 @@ const getRegisterFee =  async (id) => {
     } else {
       console.log("Document data:", docSnap.data().registerFee);
     }
-    return parseInt(docSnap.data().fee * 100);
+    return parseInt(docSnap.data().registerFee * 100);
   } catch (error) {
     console.log(error);
   }
