@@ -78,6 +78,8 @@ function generateCustomerInformation(doc, invoice) {
         .font("Helvetica")
         .text(invoice.client.name, 50, 225)
         .text(invoice.client.email, 50, 240)
+        .text(invoice.client.college, 50, 255)
+        .text(invoice.client.phone, 50, 270)
         .font("Helvetica-Bold")
         .text("MECHNIDO", 490, 210)
         .font("Helvetica")
