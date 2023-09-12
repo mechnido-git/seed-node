@@ -1,13 +1,18 @@
 const { generateInvoicePdf } = require("./utils/pdf-generator");
 const path = require("path")
 const fs = require("fs")
+const ShortUniqueId = require('short-unique-id');
 
 const foo = async ()=>{
   const clientId = "hello"
     const destinationEmail = "emsil";
 
     const invoiceId = "hiii" ;
-    const invoiceNumber = 'FACT-' + "ki" + '-' + "koo";
+    const uid = new ShortUniqueId({
+      dictionary: 'number',
+      length: 20,
+    });
+    const invoiceNumber = uid.rnd();
 
     const fileName = 'FACT-NDbQC65dt-pay_MFx2XFFHIVa0Lj' + '.pdf'
         const filePath = `/tmp/${fileName}`;
@@ -40,7 +45,7 @@ const foo = async ()=>{
               subtotal: 2500
             }
           ],
-          invoiceNumber: 'FACT-NDbQC65dt-pay_MFx2XFFHIVa0Lj',
+          invoiceNumber,
           paid: 2500,
           subtotal: 2500
         }

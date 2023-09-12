@@ -20,6 +20,12 @@ const { doc, updateDoc, getFirestore , collection, addDoc, getDoc, arrayUnion, s
 initializeApp(firebaseConfig)
 
 const { getStorage, ref, uploadBytesResumable, getDownloadURL, uploadString } = require("firebase/storage");
+const ShortUniqueId = require('short-unique-id');
+
+const uid = new ShortUniqueId({
+  dictionary: 'number',
+  length: 22,
+});
 
 const storage = getStorage();
 
@@ -119,8 +125,10 @@ app.post("/verify", async (req, res) => {
     const clientId = req.body.userId
     const destinationEmail = req.body.email;
 
-    const invoiceId = shortId.generate();
-    const invoiceNumber = 'FACT-' + invoiceId + '-' + req.body.response.razorpay_payment_id;
+    // const invoiceId = shortId.generate();
+    // const invoiceNumber = 'FACT-' + invoiceId + '-' + req.body.response.razorpay_payment_id;
+
+    const invoiceNumber = uid.rnd();
 
     const fileName = invoiceNumber + '.pdf'
         const filePath = `/tmp/${fileName}`;
@@ -343,8 +351,10 @@ app.post("/register-verify", async (req, res) => {
       console.log({...order});
       const destinationEmail = req.body.email;
   
-      const invoiceId = shortId.generate();
-      const invoiceNumber = 'FACT-' + invoiceId + '-' + req.body.response.razorpay_payment_id;
+      // const invoiceId = shortId.generate();
+      // const invoiceNumber = 'FACT-' + invoiceId + '-' + req.body.response.razorpay_payment_id;
+
+      const invoiceNumber = uid.rnd();
   
       const fileName = invoiceNumber + '.pdf'
           const filePath = `/tmp/${fileName}`;

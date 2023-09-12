@@ -4,9 +4,8 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "nodemon index.js",
-    "test": "nodemon test.js"
+    "test": "nodemon test.js",
+    "start": "nodemon index.js"
   },
   "keywords": [],
   "author": "",
@@ -20,6 +19,7 @@
     "json": "^11.0.0",
     "pdfkit": "^0.13.0",
     "razorpay": "^2.8.6",
+    "short-unique-id": "^5.0.2",
     "shortid": "^2.2.16"
   },
   "devDependencies": {
