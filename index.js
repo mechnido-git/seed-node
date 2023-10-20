@@ -5,7 +5,7 @@ const express = require("express");
 const app = express();
 const cors = require("cors");
 var crypto = require("crypto");
-
+const axios = require('axios');
 const shortId = require("shortid");
 const path = require("path");
 
@@ -45,7 +45,7 @@ const storage = getStorage();
 
 const Razorpay = require("razorpay");
 var instance = new Razorpay({
-  key_id: process.env.RAZOR_ID,
+  key_id: process.env.REACT_APP_RAZOR_ID,
   key_secret: process.env.RAZOR_SECRET,
 });
 
@@ -90,6 +90,39 @@ const get = async (index, id) => {
 
 app.use(express.json());
 
+// to send the request to the phonepay initaition
+app.post("/payments", async(req, res)=>{
+// console.log("this is my reqest ................... ",req);
+
+const url = "https://api.phonepe.com/apis/hermes/pg/v1/pay"
+
+
+const xverify = req.body.xverify;
+const load = req.body.request;
+
+console.log("xverify ", )
+
+const pay = {
+  "request":load
+}
+let p = JSON.stringify(pay);
+console.log("xvfvfvxx",typeof(xverify));
+console.log("lll",load);
+
+const config = {
+  headers:{
+    "Content-Type" : "application/json",
+    "X-VERIFY": xverify,    
+  }
+};
+//sending the request to phone pay here
+ axios.post(url, p, config)
+  .then(res => console.log(res.data.data.instrumentResponse.redirectInfo.url))
+     .catch(err => console.log("this is error",err))
+
+res.send("data sent success");
+})
+
 app.post("/order", async (req, res) => {
   try {
     //res.header("Access-Control-Allow-Origin", "*");
@@ -113,7 +146,13 @@ app.post("/order", async (req, res) => {
   //res.redirect(303, session.url);
 });
 
+app.get("/",(req, res)=>{
+  res.send("server is live")
+})
+
 app.post("/verify", async (req, res) => {
+
+  console.log(req);
   let body =
     req.body.response.razorpay_order_id +
     "|" +
