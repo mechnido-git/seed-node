@@ -137,7 +137,7 @@ app.post("/verify", async (req, res) => {
   const data = JSON.parse(string64)
   console.log(data)
 
-  const q = query(collection(db, "transactions"), where("transactionId", "==", data.merchantTransactionId));
+  const q = query(collection(db, "transactions"), where("transactionId", "==", data.data.merchantTransactionId));
 
   const querySnapshot = await getDocs(q);
   querySnapshot.forEach((doc) => {
