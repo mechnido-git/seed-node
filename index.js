@@ -74,7 +74,7 @@ app.post("/order", async (req, res) => {
       merchantTransactionId: mti,
       merchantUserId: req.body.userId,
       amount: amount,
-      redirectUrl: process.env.SERVER + "/verify",
+      redirectUrl: process.env.CLIENT + "/#/menu/dashboard",
       redirectMode: "POST",
       callbackUrl: process.env.SERVER + "/verify",
       paymentInstrument: {
@@ -121,7 +121,7 @@ app.get("/", (req, res) => {
 })
 
 app.post("/verify", async (req, res) => {
-  console.log(req)
+  console.log(req.headers)
   // const request = req.body.response;
   // const string64 = Buffer.from(request, 'base64').toString('ascii')
   // const data = JSON.parse(string64)
