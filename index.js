@@ -1,13 +1,10 @@
-// This is your test secret API key.
 const fs = require("fs");
 require("dotenv").config();
 const express = require("express");
 const app = express();
 const cors = require("cors");
-var crypto = require("crypto");
+const crypto = require("crypto");
 const axios = require('axios');
-const shortId = require("shortid");
-const path = require("path");
 
 const { generateInvoicePdf } = require("./utils/pdf-generator");
 const { sendGmail } = require("./utils/email-sender");
@@ -42,36 +39,11 @@ const uid = new ShortUniqueId({
 });
 
 const storage = getStorage();
-
-const Razorpay = require("razorpay");
-var instance = new Razorpay({
-  key_id: process.env.REACT_APP_RAZOR_ID,
-  key_secret: process.env.RAZOR_SECRET,
-});
-
 const db = getFirestore();
-
-// var whitelist = ["http://localhost:3000", "https://gregarious-griffin-da22a3.netlify.app"];
-// var corsOptions = {
-//   origin: function (origin, callback) {
-//     if (whitelist.indexOf(origin) !== -1) {
-//       callback(null, true);
-//     } else {
-//       callback(new Error("Not allowed by CORS"));
-//     }
-//   },
-//   credentials: true, //access-control-allow-credentials:true
-//   optionSuccessStatus: 200,
-// };
 
 app.use(cors());
 
-const courses = new Map([[0, { items: [20000, 35000, 45000] }]]);
-
-const YOUR_DOMAIN = "http://localhost:3000";
-
 const get = async (index, id) => {
-  const item = courses.get(index);
   console.log("id ->" + id);
   console.log(index);
   try {
@@ -91,232 +63,231 @@ const get = async (index, id) => {
 app.use(express.json());
 
 // to send the request to the phonepay initaition
-app.post("/payments", async(req, res)=>{
-// console.log("this is my reqest ................... ",req);
+app.post("/order", async (req, res) => {
 
-const url = "https://api.phonepe.com/apis/hermes/pg/v1/pay"
+  try {
+    const mti = uid.rnd()
+    const amount = await get(req.body.id, req.body.range);
+    const data =
+    {
+      merchantId: process.env.MERCHID,
+      merchantTransactionId: mti,
+      merchantUserId: req.body.userId,
+      amount: amount,
+      redirectUrl: process.env.CLIENT + "/#/menu/dashboard",
+      redirectMode: "REDIRECT",
+      callbackUrl: process.env.SERVER + "/verify",
+      paymentInstrument: {
+        type: "PAY_PAGE"
+      }
+    }
 
+    const key = process.env.MERCHKEY
+    const index = process.env.MERCHINDEX
 
-const xverify = req.body.xverify;
-const load = req.body.request;
+    const buf = JSON.stringify(data)
+    const payload = Buffer.from(buf).toString('base64');
+    const code = payload + "/pg/v1/pay" + key
+    var hash = crypto.createHash('sha256');
+    originalValue = hash.update(code, 'utf-8');
+    hashValue = originalValue.digest('hex');
+    const xverify = hashValue + "###" + index
+    const config = {
+      headers: {
+        accept: 'application/json',
+        "Content-Type": "application/json",
+        "X-VERIFY": xverify,
+      }
+    };
 
-console.log("xverify ", )
+    const url = "https://api-preprod.phonepe.com/apis/pg-sandbox/pg/v1/pay"
 
-const pay = {
-  "request":load
-}
-let p = JSON.stringify(pay);
-console.log("xvfvfvxx",typeof(xverify));
-console.log("lll",load);
+    const pay = {
+      request: payload
+    }
 
-const config = {
-  headers:{
-    "Content-Type" : "application/json",
-    "X-VERIFY": xverify,    
+    const response = await axios.post(url, pay, config)
+    if (response.data.success) res.status(200).json({ url: response.data.data.instrumentResponse.redirectInfo.url })
+
+    console.log(response.data.data)
+  } catch (error) {
+    console.log(error.message);
+    res.status(error.response.status).json({ error: error.message });
   }
-};
-//sending the request to phone pay here
- axios.post(url, p, config)
-  .then(res => console.log(res.data.data.instrumentResponse.redirectInfo.url))
-     .catch(err => console.log("this is error",err))
-
-res.send("data sent success");
 })
 
-app.post("/order", async (req, res) => {
-  try {
-    //res.header("Access-Control-Allow-Origin", "*");
-
-    const amount = await get(req.body.id, req.body.range);
-    console.log(amount);
-
-    var options = {
-      amount: amount, // amount in the smallest currency unit
-      currency: "INR",
-    };
-    instance.orders.create(options, function (err, order) {
-      if (err) return res.status(500).json({ error: err });
-
-      return res.status(200).json({ order });
-    });
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-    console.log(error);
-  }
-  //res.redirect(303, session.url);
-});
-
-app.get("/",(req, res)=>{
+app.get("/", (req, res) => {
   res.send("server is live")
 })
 
 app.post("/verify", async (req, res) => {
+  console.log(req)
 
-  console.log(req);
-  let body =
-    req.body.response.razorpay_order_id +
-    "|" +
-    req.body.response.razorpay_payment_id;
-  console.log(req.body);
+  // console.log(req);
+  // let body =
+  //   req.body.response.razorpay_order_id +
+  //   "|" +
+  //   req.body.response.razorpay_payment_id;
+  // console.log(req.body);
 
-  var expectedSignature = crypto
-    .createHmac("sha256", process.env.RAZOR_SECRET)
-    .update(body.toString())
-    .digest("hex");
-  var response = { signatureIsValid: "false" };
-  if (expectedSignature === req.body.response.razorpay_signature) {
-    try {
-      const payment = await instance.payments.fetch(
-        req.body.response.razorpay_payment_id
-      );
-      const order = await instance.orders.fetch(
-        req.body.response.razorpay_order_id
-      );
+  // var expectedSignature = crypto
+  //   .createHmac("sha256", process.env.RAZOR_SECRET)
+  //   .update(body.toString())
+  //   .digest("hex");
+  // var response = { signatureIsValid: "false" };
+  // if (expectedSignature === req.body.response.razorpay_signature) {
+  //   try {
+  //     const payment = await instance.payments.fetch(
+  //       req.body.response.razorpay_payment_id
+  //     );
+  //     const order = await instance.orders.fetch(
+  //       req.body.response.razorpay_order_id
+  //     );
 
-      console.log({ ...payment });
-      console.log({ ...order });
-      const clientId = req.body.userId;
-      const destinationEmail = req.body.email;
+  //     console.log({ ...payment });
+  //     console.log({ ...order });
+  //     const clientId = req.body.userId;
+  //     const destinationEmail = req.body.email;
 
-      // const invoiceId = shortId.generate();
-      // const invoiceNumber = 'FACT-' + invoiceId + '-' + req.body.response.razorpay_payment_id;
+  //     // const invoiceId = shortId.generate();
+  //     // const invoiceNumber = 'FACT-' + invoiceId + '-' + req.body.response.razorpay_payment_id;
 
-      const invoiceNumber = uid.rnd();
-      let college = "";
-      let phone = "";
-      const cityRef = doc(db, "users", req.body.userId);
-      const docSnap = await getDoc(cityRef);
-      if (!docSnap.exists) {
-        console.log("No such document!");
-      } else {
-        college = docSnap.data().college;
-        phone = docSnap.data().mobile;
-      }
+  //     const invoiceNumber = uid.rnd();
+  //     let college = "";
+  //     let phone = "";
+  //     const cityRef = doc(db, "users", req.body.userId);
+  //     const docSnap = await getDoc(cityRef);
+  //     if (!docSnap.exists) {
+  //       console.log("No such document!");
+  //     } else {
+  //       college = docSnap.data().college;
+  //       phone = docSnap.data().mobile;
+  //     }
 
-      const fileName = invoiceNumber + ".pdf";
-      const filePath = `/tmp/${fileName}`;
-      const client = {
-        name: req.body.userName,
-        email: req.body.email,
-        clientId: req.body.userId,
-        pricePerSession: 1,
-        college,
-        phone,
-        address: "",
-        city: "",
-        state: "",
-        postal_code: "",
-      };
-      const invoiceDetails = {
-        client,
-        items: [
-          {
-            item: req.body.item,
-            quantity: 1,
-            amountSum: order.amount / 100,
-            subtotal: order.amount / 100,
-          },
-        ],
-        invoiceNumber,
-        paid: order.amount / 100,
-        subtotal: order.amount / 100,
-      };
+  //     const fileName = invoiceNumber + ".pdf";
+  //     const filePath = `/tmp/${fileName}`;
+  //     const client = {
+  //       name: req.body.userName,
+  //       email: req.body.email,
+  //       clientId: req.body.userId,
+  //       pricePerSession: 1,
+  //       college,
+  //       phone,
+  //       address: "",
+  //       city: "",
+  //       state: "",
+  //       postal_code: "",
+  //     };
+  //     const invoiceDetails = {
+  //       client,
+  //       items: [
+  //         {
+  //           item: req.body.item,
+  //           quantity: 1,
+  //           amountSum: order.amount / 100,
+  //           subtotal: order.amount / 100,
+  //         },
+  //       ],
+  //       invoiceNumber,
+  //       paid: order.amount / 100,
+  //       subtotal: order.amount / 100,
+  //     };
 
-      await generateInvoicePdf(invoiceDetails, filePath, after, res);
+  //     await generateInvoicePdf(invoiceDetails, filePath, after, res);
 
-      async function after(res) {
-        try {
-          const storageRef = ref(
-            storage,
-            `invoices/${req.body.response.razorpay_payment_id}/${fileName}`
-          );
-          const file = fs.readFileSync(filePath, "base64");
-          uploadString(storageRef, file, "base64").then((snapshot) => {
-            console.log("Uploaded a base64 string!");
-            getDownloadURL(snapshot.ref).then(async (downloadURL) => {
-              console.log("File available at", downloadURL);
-              await update(db, order, downloadURL, res);
-            });
-          });
+  //     async function after(res) {
+  //       try {
+  //         const storageRef = ref(
+  //           storage,
+  //           `invoices/${req.body.response.razorpay_payment_id}/${fileName}`
+  //         );
+  //         const file = fs.readFileSync(filePath, "base64");
+  //         uploadString(storageRef, file, "base64").then((snapshot) => {
+  //           console.log("Uploaded a base64 string!");
+  //           getDownloadURL(snapshot.ref).then(async (downloadURL) => {
+  //             console.log("File available at", downloadURL);
+  //             await update(db, order, downloadURL, res);
+  //           });
+  //         });
 
-          async function update(db, order, downloadURL, res) {
-            await addDoc(collection(db, "payments"), {
-              amount: order.amount / 100,
-              invoice: downloadURL,
-              item: "course",
-              itemName: req.body.item,
-              razorId: req.body.response.razorpay_payment_id,
-              satus: "purchased",
-              userId: req.body.userId,
-              userName: req.body.userName,
-              timestamp: serverTimestamp(),
-            });
-            const course = doc(db, "courses", req.body.courseId);
-            const unionRes = await updateDoc(course, {
-              enrolled: arrayUnion({
-                userId: req.body.userId,
-                payRange: req.body.range,
-                invoice: downloadURL,
-              }),
-            });
-            await updateDoc(course, {
-              enrolled_arr: arrayUnion(req.body.userId),
-            });
-            response = { signatureIsValid: "true" };
-            res.json({ response });
-          }
+  //         async function update(db, order, downloadURL, res) {
+  //           await addDoc(collection(db, "payments"), {
+  //             amount: order.amount / 100,
+  //             invoice: downloadURL,
+  //             item: "course",
+  //             itemName: req.body.item,
+  //             razorId: req.body.response.razorpay_payment_id,
+  //             satus: "purchased",
+  //             userId: req.body.userId,
+  //             userName: req.body.userName,
+  //             timestamp: serverTimestamp(),
+  //           });
+  //           const course = doc(db, "courses", req.body.courseId);
+  //           const unionRes = await updateDoc(course, {
+  //             enrolled: arrayUnion({
+  //               userId: req.body.userId,
+  //               payRange: req.body.range,
+  //               invoice: downloadURL,
+  //             }),
+  //           });
+  //           await updateDoc(course, {
+  //             enrolled_arr: arrayUnion(req.body.userId),
+  //           });
+  //           response = { signatureIsValid: "true" };
+  //           res.json({ response });
+  //         }
 
-          const files = [filePath];
+  //         const files = [filePath];
 
-          // const pdf = [`https://cyclic-grumpy-puce-frog-us-east-1.s3.amazonaws.com/some_files/${invoiceNumber}.pdf`]
-          // console.log(pdf);
+  //         // const pdf = [`https://cyclic-grumpy-puce-frog-us-east-1.s3.amazonaws.com/some_files/${invoiceNumber}.pdf`]
+  //         // console.log(pdf);
 
-          await sendGmail(
-            destinationEmail,
-            `
-              <!-- HTML Codes by Quackit.com -->
-              <!DOCTYPE html>
-              <title>Text Example</title>
-              <style>
-              div.container {
-              background-color: #ffffff;
-              }
-              div.container p {
-              font-family: Arial;
-              font-size: 14px;
-              font-style: normal;
-              font-weight: normal;
-              text-decoration: none;
-              text-transform: none;
-              color: #000000;
-              background-color: #ffffff;
-              }
-              </style>
-    
-              <div class="container">
-              <p>Hello,</p>
-              <p></p>
-              <p>I hope everything is good from your side. As per our session no. <b>${invoiceNumber}</b> , please find below the invoice.</p>
-              <p>Thanks.</p>
-              <p><b>Note -> This is an automatic email.</b>
-              </div>
-              
-              `,
-            `Invoice: ${invoiceNumber}`,
-            files
-          );
-        } catch (error) {
-          console.log(error);
-          res.status(500).json({ error });
-        }
-      }
-    } catch (error) {
-      console.log(error);
-      res.status(500).json({ error });
-    }
-  } else {
-    res.status(500).json({ error: "signature Error" });
-  }
+  //         await sendGmail(
+  //           destinationEmail,
+  //           `
+  //             <!-- HTML Codes by Quackit.com -->
+  //             <!DOCTYPE html>
+  //             <title>Text Example</title>
+  //             <style>
+  //             div.container {
+  //             background-color: #ffffff;
+  //             }
+  //             div.container p {
+  //             font-family: Arial;
+  //             font-size: 14px;
+  //             font-style: normal;
+  //             font-weight: normal;
+  //             text-decoration: none;
+  //             text-transform: none;
+  //             color: #000000;
+  //             background-color: #ffffff;
+  //             }
+  //             </style>
+
+  //             <div class="container">
+  //             <p>Hello,</p>
+  //             <p></p>
+  //             <p>I hope everything is good from your side. As per our session no. <b>${invoiceNumber}</b> , please find below the invoice.</p>
+  //             <p>Thanks.</p>
+  //             <p><b>Note -> This is an automatic email.</b>
+  //             </div>
+
+  //             `,
+  //           `Invoice: ${invoiceNumber}`,
+  //           files
+  //         );
+  // } catch (error) {
+  //   console.log(error);
+  //   res.status(500).json({ error });
+  // }
+  // }
+  // } catch (error) {
+  //   console.log(error);
+  //   res.status(500).json({ error });
+  // }
+  // } else {
+  //   res.status(500).json({ error: "signature Error" });
+  // }
 });
 
 app.post("/event/email", async (req, res) => {
