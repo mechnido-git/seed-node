@@ -229,7 +229,7 @@ try {
               transactionId: order.transactionId,
               satus: "purchased",
               userId: order.userId,
-              userName: order.userName,
+              userName: order.username,
               timestamp: serverTimestamp(),
             });
             const course = doc(db, "courses", order.courseId);
