@@ -121,7 +121,7 @@ app.get("/", (req, res) => {
 })
 
 app.post("/verify", async (req, res) => {
-  console.log(req.headers.host)
+  console.log(req.headers["x-verify"])
   // const request = req.body.response;
   // const string64 = Buffer.from(request, 'base64').toString('ascii')
   // const data = JSON.parse(string64)
