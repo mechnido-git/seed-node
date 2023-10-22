@@ -20,6 +20,9 @@ const {
   getDoc,
   arrayUnion,
   serverTimestamp,
+  query,
+  where,
+  getDocs,
 } = require("firebase/firestore");
 
 initializeApp(firebaseConfig);
@@ -74,7 +77,6 @@ app.post("/order", async (req, res) => {
       merchantTransactionId: mti,
       merchantUserId: req.body.userId,
       amount: amount,
-      njan: "hello",
       redirectUrl: process.env.CLIENT + "/#/menu/dashboard",
       redirectMode: "POST",
       callbackUrl: process.env.SERVER + "/verify",
@@ -82,6 +84,13 @@ app.post("/order", async (req, res) => {
         type: "PAY_PAGE"
       }
     }
+
+    await addDoc(collection(db, "transactions"), {
+      amount: amount / 100,
+      userId: req.body.userId,
+      transactionId: mti,
+      courseId: req.body.id
+    });
 
     const key = process.env.MERCHKEY
     const index = process.env.MERCHINDEX
@@ -128,38 +137,45 @@ app.post("/verify", async (req, res) => {
   const data = JSON.parse(string64)
   console.log(data)
 
-      // const clientId = req.body.userId;
-      // const destinationEmail = req.body.email;
+  const q = query(collection(db, "transactions"), where("transactionId", "==", data.merchantTransactionId));
 
-      // const invoiceId = shortId.generate();
-      // const invoiceNumber = 'FACT-' + invoiceId + '-' + req.body.response.razorpay_payment_id;
+  const querySnapshot = await getDocs(q);
+  querySnapshot.forEach((doc) => {
+    console.log(doc.id, " => ", doc.data());
+  });
 
-      // const invoiceNumber = uid.rnd();
-      // let college = "";
-      // let phone = "";
-      // const cityRef = doc(db, "users", req.body.userId);
-      // const docSnap = await getDoc(cityRef);
-      // if (!docSnap.exists) {
-      //   console.log("No such document!");
-      // } else {
-      //   college = docSnap.data().college;
-      //   phone = docSnap.data().mobile;
-      // }
+  // const clientId = req.body.userId;
+  // const destinationEmail = req.body.email;
 
-      // const fileName = invoiceNumber + ".pdf";
-      // const filePath = `/tmp/${fileName}`;
-      // const client = {
-      //   name: req.body.userName,
-      //   email: req.body.email,
-      //   clientId: req.body.userId,
-      //   pricePerSession: 1,
-      //   college,
-      //   phone,
-      //   address: "",
-      //   city: "",
-      //   state: "",
-      //   postal_code: "",
-      // };
+  // const invoiceId = shortId.generate();
+  // const invoiceNumber = 'FACT-' + invoiceId + '-' + req.body.response.razorpay_payment_id;
+
+  // const invoiceNumber = uid.rnd();
+  // let college = "";
+  // let phone = "";
+  // const cityRef = doc(db, "users", req.body.userId);
+  // const docSnap = await getDoc(cityRef);
+  // if (!docSnap.exists) {
+  //   console.log("No such document!");
+  // } else {
+  //   college = docSnap.data().college;
+  //   phone = docSnap.data().mobile;
+  // }
+
+  // const fileName = invoiceNumber + ".pdf";
+  // const filePath = `/tmp/${fileName}`;
+  // const client = {
+  //   name: req.body.userName,
+  //   email: req.body.email,
+  //   clientId: req.body.userId,
+  //   pricePerSession: 1,
+  //   college,
+  //   phone,
+  //   address: "",
+  //   city: "",
+  //   state: "",
+  //   postal_code: "",
+  // };
   //     const invoiceDetails = {
   //       client,
   //       items: [
