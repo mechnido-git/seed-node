@@ -78,7 +78,7 @@ app.post("/order", async (req, res) => {
       merchantTransactionId: mti,
       merchantUserId: req.body.userId,
       amount: amount,
-      redirectUrl: process.env.CLIENT + "/#/menu/dashboard",
+      redirectUrl: process.env.CLIENT + "/#/menu/processing",
       redirectMode: "REDIRECT",
       callbackUrl: process.env.SERVER + "/verify",
       paymentInstrument: {
@@ -156,11 +156,7 @@ try {
 
   if(!order) return res.status(500).json({error: "server error"})
 
-  const clientId = order.userId;
   const destinationEmail = order.email;
-
-  const invoiceId = shortId.generate();
-  // const invoiceNumber = 'FACT-' + invoiceId + '-' + req.body.response.razorpay_payment_id;
 
   const invoiceNumber = uid.rnd();
   let college = "";
@@ -233,7 +229,7 @@ try {
               timestamp: serverTimestamp(),
             });
             const course = doc(db, "courses", order.courseId);
-            const unionRes = await updateDoc(course, {
+            await updateDoc(course, {
               enrolled: arrayUnion({
                 userId: order.userId,
                 payRange: order.range,
