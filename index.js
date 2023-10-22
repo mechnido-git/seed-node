@@ -94,7 +94,8 @@ app.post("/order", async (req, res) => {
       transactionId: mti,
       courseId: req.body.id,
       email: req.body.email,
-      username: req.body.username
+      username: req.body.username,
+      range: req.body.range
     });
 
     const key = process.env.MERCHKEY
@@ -164,7 +165,7 @@ try {
   const invoiceNumber = uid.rnd();
   let college = "";
   let phone = "";
-  const cityRef = doc(db, "users", req.body.userId);
+  const cityRef = doc(db, "users", order.userId);
   const docSnap = await getDoc(cityRef);
   if (!docSnap.exists) {
     console.log("No such document!");
@@ -224,23 +225,23 @@ try {
               amount: order.amount / 100,
               invoice: downloadURL,
               item: "course",
-              itemName: req.body.item,
-              razorId: req.body.response.razorpay_payment_id,
+              itemName: order.name,
+              transactionId: order.transactionId,
               satus: "purchased",
-              userId: req.body.userId,
-              userName: req.body.userName,
+              userId: order.userId,
+              userName: order.userName,
               timestamp: serverTimestamp(),
             });
-            const course = doc(db, "courses", req.body.courseId);
+            const course = doc(db, "courses", order.courseId);
             const unionRes = await updateDoc(course, {
               enrolled: arrayUnion({
-                userId: req.body.userId,
-                payRange: req.body.range,
+                userId: order.userId,
+                payRange: order.range,
                 invoice: downloadURL,
               }),
             });
             await updateDoc(course, {
-              enrolled_arr: arrayUnion(req.body.userId),
+              enrolled_arr: arrayUnion(order.userId),
             });
             response = { signatureIsValid: "true" };
             res.json({ response });
