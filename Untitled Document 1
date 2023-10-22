@@ -1,0 +1,13 @@
+  body: {
+    response: 'eyJzdWNjZXNzIjp0cnVlLCJjb2RlIjoiUEFZTUVOVF9TVUNDRVNTIiwibWVzc2FnZSI6IllvdXIgcGF5bWVudCBpcyBzdWNjZXNzZnVsLiIsImRhdGEiOnsibWVyY2hhbnRJZCI6IlBHVEVTVFBBWVVBVCIsIm1lcmNoYW50VHJhbnNhY3Rpb25JZCI6IjA0Mzk3ODk1ODc5MTUxMjUxOTA4NTkiLCJ0cmFuc2FjdGlvbklkIjoiVDIzMTAyMjE0MjAzMjI4MDIzNjc5OTUiLCJhbW91bnQiOjI0OTkwMCwic3RhdGUiOiJDT01QTEVURUQiLCJyZXNwb25zZUNvZGUiOiJTVUNDRVNTIiwicGF5bWVudEluc3RydW1lbnQiOnsidHlwZSI6IkNBUkQiLCJjYXJkVHlwZSI6IkNSRURJVF9DQVJEIiwicGdUcmFuc2FjdGlvbklkIjoiUEcyMjA3MjIxNDMyMjY3NTIyNTMwNzc2IiwiYmFua1RyYW5zYWN0aW9uSWQiOm51bGwsInBnQXV0aG9yaXphdGlvbkNvZGUiOm51bGwsImFybiI6bnVsbCwiYmFua0lkIjoiIiwiYnJuIjoiQjEyMzQ1In19fQ=='
+  },
+  
+    headers: {
+    connection: 'upgrade',
+    host: 'api.mseed.in',
+    'content-length': '639',
+    'x-verify': 'ac9381b0b84d9454681a86bd579020ba06f8ff3422abb33b86cc489f706d3272###1',
+    'content-type': 'application/json; charset=utf-8',
+    'accept-encoding': 'gzip',
+    'user-agent': 'okhttp/4.11.0-PPE'
+  },

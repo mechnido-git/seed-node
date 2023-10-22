@@ -74,8 +74,8 @@ app.post("/order", async (req, res) => {
       merchantTransactionId: mti,
       merchantUserId: req.body.userId,
       amount: amount,
-      redirectUrl: process.env.CLIENT + "/#/menu/dashboard",
-      redirectMode: "REDIRECT",
+      redirectUrl: process.env.SERVER + "/verify",
+      redirectMode: "POST",
       callbackUrl: process.env.SERVER + "/verify",
       paymentInstrument: {
         type: "PAY_PAGE"
@@ -122,62 +122,43 @@ app.get("/", (req, res) => {
 
 app.post("/verify", async (req, res) => {
   console.log(req)
+  // const request = req.body.response;
+  // const string64 = Buffer.from(request, 'base64').toString('ascii')
+  // const data = JSON.parse(string64)
+  // console.log(data)
 
-  // console.log(req);
-  // let body =
-  //   req.body.response.razorpay_order_id +
-  //   "|" +
-  //   req.body.response.razorpay_payment_id;
-  // console.log(req.body);
+      // const clientId = req.body.userId;
+      // const destinationEmail = req.body.email;
 
-  // var expectedSignature = crypto
-  //   .createHmac("sha256", process.env.RAZOR_SECRET)
-  //   .update(body.toString())
-  //   .digest("hex");
-  // var response = { signatureIsValid: "false" };
-  // if (expectedSignature === req.body.response.razorpay_signature) {
-  //   try {
-  //     const payment = await instance.payments.fetch(
-  //       req.body.response.razorpay_payment_id
-  //     );
-  //     const order = await instance.orders.fetch(
-  //       req.body.response.razorpay_order_id
-  //     );
+      // const invoiceId = shortId.generate();
+      // const invoiceNumber = 'FACT-' + invoiceId + '-' + req.body.response.razorpay_payment_id;
 
-  //     console.log({ ...payment });
-  //     console.log({ ...order });
-  //     const clientId = req.body.userId;
-  //     const destinationEmail = req.body.email;
+      // const invoiceNumber = uid.rnd();
+      // let college = "";
+      // let phone = "";
+      // const cityRef = doc(db, "users", req.body.userId);
+      // const docSnap = await getDoc(cityRef);
+      // if (!docSnap.exists) {
+      //   console.log("No such document!");
+      // } else {
+      //   college = docSnap.data().college;
+      //   phone = docSnap.data().mobile;
+      // }
 
-  //     // const invoiceId = shortId.generate();
-  //     // const invoiceNumber = 'FACT-' + invoiceId + '-' + req.body.response.razorpay_payment_id;
-
-  //     const invoiceNumber = uid.rnd();
-  //     let college = "";
-  //     let phone = "";
-  //     const cityRef = doc(db, "users", req.body.userId);
-  //     const docSnap = await getDoc(cityRef);
-  //     if (!docSnap.exists) {
-  //       console.log("No such document!");
-  //     } else {
-  //       college = docSnap.data().college;
-  //       phone = docSnap.data().mobile;
-  //     }
-
-  //     const fileName = invoiceNumber + ".pdf";
-  //     const filePath = `/tmp/${fileName}`;
-  //     const client = {
-  //       name: req.body.userName,
-  //       email: req.body.email,
-  //       clientId: req.body.userId,
-  //       pricePerSession: 1,
-  //       college,
-  //       phone,
-  //       address: "",
-  //       city: "",
-  //       state: "",
-  //       postal_code: "",
-  //     };
+      // const fileName = invoiceNumber + ".pdf";
+      // const filePath = `/tmp/${fileName}`;
+      // const client = {
+      //   name: req.body.userName,
+      //   email: req.body.email,
+      //   clientId: req.body.userId,
+      //   pricePerSession: 1,
+      //   college,
+      //   phone,
+      //   address: "",
+      //   city: "",
+      //   state: "",
+      //   postal_code: "",
+      // };
   //     const invoiceDetails = {
   //       client,
   //       items: [
