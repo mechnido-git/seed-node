@@ -173,7 +173,7 @@ try {
   const fileName = invoiceNumber + ".pdf";
   const filePath = `/tmp/${fileName}`;
   const client = {
-    name: order.userName,
+    name: order.username,
     email: order.email,
     clientId: order.userId,
     pricePerSession: 1,
