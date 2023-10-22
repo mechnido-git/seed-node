@@ -53,10 +53,9 @@ const foo = async () => {
   }
   const lol = 'ui'
 
-  const msg = await generateInvoicePdf(invoiceDetails, filePath, after, lol);
-  async function after(wow) {
-  }
-  console.log("ji");
+  const msg = await generateInvoicePdf(invoiceDetails, filePath);
+  
+  console.log(msg);
   // const file = fs.readFileSync(filePath, "base64")
   // console.log(file);
 }
@@ -121,4 +120,4 @@ axios
   });
 }
 
-genHash()
+foo()

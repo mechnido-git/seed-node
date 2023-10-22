@@ -70,8 +70,10 @@ app.use(express.json());
 app.post("/order", async (req, res) => {
 
   try {
-    const mti = uid.rnd()
+    const mti = uid.rnd() //merchend transaction ID
     const amount = await get(req.body.id, req.body.range);
+
+    //setting data as in the phonepe documentation
     const data =
     {
       merchantId: process.env.MERCHID,
@@ -85,8 +87,8 @@ app.post("/order", async (req, res) => {
         type: "PAY_PAGE"
       }
     }
-    console.log(req.body.email)
 
+    //storing the initiated transaction details for feature use
     await addDoc(collection(db, "transactions"), {
       amount: amount / 100,
       userId: req.body.userId,
@@ -101,13 +103,18 @@ app.post("/order", async (req, res) => {
     const key = process.env.MERCHKEY
     const index = process.env.MERCHINDEX
 
+    //convering the data to base64
     const buf = JSON.stringify(data)
     const payload = Buffer.from(buf).toString('base64');
+
+    //genrating hash for the phonepe payment initiation
     const code = payload + "/pg/v1/pay" + key
     var hash = crypto.createHash('sha256');
     originalValue = hash.update(code, 'utf-8');
     hashValue = originalValue.digest('hex');
     const xverify = hashValue + "###" + index
+
+    //necessary headers for payment initiation
     const config = {
       headers: {
         accept: 'application/json',
@@ -115,17 +122,18 @@ app.post("/order", async (req, res) => {
         "X-VERIFY": xverify,
       }
     };
-
     const url = "https://api-preprod.phonepe.com/apis/pg-sandbox/pg/v1/pay"
 
+    //request body
     const pay = {
       request: payload
     }
 
     const response = await axios.post(url, pay, config)
+
+    //sending the URL for the payment gateway to the client
     if (response.data.success) res.status(200).json({ url: response.data.data.instrumentResponse.redirectInfo.url })
 
-    console.log(response.data.data)
   } catch (error) {
     console.log(error.message);
     res.status(error.response.status).json({ error: error.message });
@@ -138,119 +146,122 @@ app.get("/", (req, res) => {
 
 app.post("/verify", async (req, res) => {
 
-try {
+  try {
+    //decripting the response
+    const request = req.body.response;
+    const string64 = Buffer.from(request, 'base64').toString('ascii')
+    const data = JSON.parse(string64)
 
-  const request = req.body.response;
-  console.log(request);
-  const string64 = Buffer.from(request, 'base64').toString('ascii')
-  const data = JSON.parse(string64)
-  console.log(data)
+    //checking for the transaction details initiated by the client and mathing the current transaction id that recieved
+    const q = query(collection(db, "transactions"), where("transactionId", "==", data.data.merchantTransactionId));
+    let order = false
+    const querySnapshot = await getDocs(q);
+    querySnapshot.forEach((doc) => {
+      order = doc.data()
+    });
 
-  const q = query(collection(db, "transactions"), where("transactionId", "==", data.data.merchantTransactionId));
-  let order = false
-  const querySnapshot = await getDocs(q);
-  querySnapshot.forEach((doc) => {
-    console.log(doc.id, " => ", doc.data());
-    order = doc.data()
-  });
+    if (!order) return res.status(500).json({ error: "server error" })
 
-  if(!order) return res.status(500).json({error: "server error"})
+    // email for sending invoice
+    const destinationEmail = order.email;
 
-  const destinationEmail = order.email;
+    //setting the data for the invoice pdf
+    const invoiceNumber = uid.rnd();
+    //display college/phone if it is in the database
+    let college = "";
+    let phone = "";
+    const cityRef = doc(db, "users", order.userId);
+    const docSnap = await getDoc(cityRef);
+    if (!docSnap.exists) {
+      console.log("No such document!");
+    } else {
+      college = docSnap.data().college;
+      phone = docSnap.data().mobile;
+    }
 
-  const invoiceNumber = uid.rnd();
-  let college = "";
-  let phone = "";
-  const cityRef = doc(db, "users", order.userId);
-  const docSnap = await getDoc(cityRef);
-  if (!docSnap.exists) {
-    console.log("No such document!");
-  } else {
-    college = docSnap.data().college;
-    phone = docSnap.data().mobile;
-  }
+    const fileName = invoiceNumber + ".pdf";
+    const filePath = `/tmp/${fileName}`; //local file path for generating pdf
 
-  const fileName = invoiceNumber + ".pdf";
-  const filePath = `/tmp/${fileName}`;
-  const client = {
-    name: order.username,
-    email: order.email,
-    clientId: order.userId,
-    pricePerSession: 1,
-    college,
-    phone,
-    address: "",
-    city: "",
-    state: "",
-    postal_code: "",
-  };
-      const invoiceDetails = {
-        client,
-        items: [
-          {
-            item: order.name,
-            quantity: 1,
-            amountSum: order.amount,
-            subtotal: order.amount,
-          },
-        ],
-        invoiceNumber,
-        paid: order.amount,
-        subtotal: order.amount,
-      };
+    //client deatils for generating invoice
+    const client = {
+      name: order.username,
+      email: order.email,
+      clientId: order.userId,
+      pricePerSession: 1,
+      college,
+      phone,
+      address: "",
+      city: "",
+      state: "",
+      postal_code: "",
+    };
 
-      await generateInvoicePdf(invoiceDetails, filePath, after, res);
+    //setting other invoice details
+    const invoiceDetails = {
+      client,
+      items: [
+        {
+          item: order.name,
+          quantity: 1,
+          amountSum: order.amount,
+          subtotal: order.amount,
+        },
+      ],
+      invoiceNumber,
+      paid: order.amount,
+      subtotal: order.amount,
+    };
 
-      async function after(res) {
-        try {
-          const storageRef = ref(
-            storage,
-            `invoices/${req.body.response.razorpay_payment_id}/${fileName}`
-          );
-          const file = fs.readFileSync(filePath, "base64");
-          uploadString(storageRef, file, "base64").then((snapshot) => {
-            console.log("Uploaded a base64 string!");
-            getDownloadURL(snapshot.ref).then(async (downloadURL) => {
-              console.log("File available at", downloadURL);
-              await update(db, order, downloadURL, res);
-            });
-          });
+    //genarting invoice pdf
+    await generateInvoicePdf(invoiceDetails, filePath);
 
-          async function update(db, order, downloadURL, res) {
-            await addDoc(collection(db, "payments"), {
-              amount: order.amount / 100,
-              invoice: downloadURL,
-              item: "course",
-              itemName: order.name,
-              transactionId: order.transactionId,
-              satus: "purchased",
-              userId: order.userId,
-              userName: order.username,
-              timestamp: serverTimestamp(),
-            });
-            const course = doc(db, "courses", order.courseId);
-            await updateDoc(course, {
-              enrolled: arrayUnion({
-                userId: order.userId,
-                payRange: order.range,
-                invoice: downloadURL,
-              }),
-            });
-            await updateDoc(course, {
-              enrolled_arr: arrayUnion(order.userId),
-            });
-            response = { signatureIsValid: "true" };
-            res.json({ response });
-          }
+    //storing the generated pdf into firebase storage
+    const storageRef = ref(
+      storage,
+      `invoices/${req.body.response.razorpay_payment_id}/${fileName}`
+    );
+    const file = fs.readFileSync(filePath, "base64");
+    const snapshot = await uploadString(storageRef, file, "base64")
+    console.log("Uploaded a base64 string!");
+    const downloadURL = await getDownloadURL(snapshot.ref)
+    console.log("File available at", downloadURL);
 
-          const files = [filePath];
+    //updating the database to finalize the payment
+    await addDoc(collection(db, "payments"), {
+      amount: order.amount / 100,
+      invoice: downloadURL,
+      item: "course",
+      itemName: order.name,
+      transactionId: order.transactionId,
+      satus: "purchased",
+      userId: order.userId,
+      userName: order.username,
+      timestamp: serverTimestamp(),
+    });
 
-          // const pdf = [`https://cyclic-grumpy-puce-frog-us-east-1.s3.amazonaws.com/some_files/${invoiceNumber}.pdf`]
-          // console.log(pdf);
+    //assigning the purachsed userid to the course
+    const course = doc(db, "courses", order.courseId);
+    await updateDoc(course, {
+      enrolled: arrayUnion({
+        userId: order.userId,
+        payRange: order.range,
+        invoice: downloadURL,
+      }),
+    });
+    await updateDoc(course, {
+      enrolled_arr: arrayUnion(order.userId),
+    });
 
-          await sendGmail(
-            destinationEmail,
-            `
+    //sending response to the client after necessary updates
+    response = { signatureIsValid: "true" };
+    res.json({ response });
+
+    const files = [filePath];
+
+    //sendign email with attached pdf invoice
+    await sendGmail(
+      destinationEmail,
+      `
               <!-- HTML Codes by Quackit.com -->
               <!DOCTYPE html>
               <title>Text Example</title>
@@ -279,18 +290,13 @@ try {
               </div>
 
               `,
-            `Invoice: ${invoiceNumber}`,
-            files
-          );
+      `Invoice: ${invoiceNumber}`,
+      files
+    );
   } catch (error) {
-    console.log(error);
-    res.status(500).json({ error });
-  }}
-} catch (error) {
-  console.log(error);
-  res.status(500).json({ error });
-}
-
+    console.log(error)
+    res.status(500).json(error)
+  }
 });
 
 app.post("/event/email", async (req, res) => {

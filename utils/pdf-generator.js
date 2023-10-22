@@ -4,22 +4,23 @@ const pt = require("path")
 
 
 async function generateInvoicePdf(invoice, path, done, res) {
-    let doc = new PDFDocument({ size: "A4", margin: 50 });
+    return new Promise((resolve, reject) => {
+        let doc = new PDFDocument({ size: "A4", margin: 50 });
 
-    console.log(invoice);
-    generateHeader(doc);
-    generateCustomerInformation(doc, invoice);
-    generateInvoiceTable(doc, invoice);
+        console.log(invoice);
+        generateHeader(doc);
+        generateCustomerInformation(doc, invoice);
+        generateInvoiceTable(doc, invoice);
 
-    const outStream = fs.createWriteStream(path)
+        const outStream = fs.createWriteStream(path)
 
-    doc.pipe(outStream);
-    doc.end();
-        outStream.on('finish', ()=>{
+        doc.pipe(outStream);
+        doc.end();
+        outStream.on('finish', () => {
             console.log("finis");
-            done(res)
-            
+            resolve(true)
         })
+    })
 }
 
 function generateHeader(doc) {
@@ -49,7 +50,7 @@ function generateCustomerInformation(doc, invoice) {
         .text(formatDate(new Date()), 150, customerInformationTop + 15)
         .text("Balance Due:", 50, customerInformationTop + 30)
         .text(
-            formatCurrency(invoice.subtotal-invoice.paid),
+            formatCurrency(invoice.subtotal - invoice.paid),
             150,
             customerInformationTop + 30
         )
@@ -88,7 +89,7 @@ function generateCustomerInformation(doc, invoice) {
         .text("PAN No: ABKFM0821E", 440, 255)
         .text("Mail : support@mseed.in", 432, 270)
 
-        generateHr(doc, 290);
+    generateHr(doc, 290);
 }
 
 function generateInvoiceTable(doc, invoice) {
