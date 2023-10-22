@@ -74,6 +74,7 @@ app.post("/order", async (req, res) => {
       merchantTransactionId: mti,
       merchantUserId: req.body.userId,
       amount: amount,
+      njan: "hello",
       redirectUrl: process.env.CLIENT + "/#/menu/dashboard",
       redirectMode: "POST",
       callbackUrl: process.env.SERVER + "/verify",
@@ -121,11 +122,11 @@ app.get("/", (req, res) => {
 })
 
 app.post("/verify", async (req, res) => {
-  console.log(req.headers["x-verify"])
-  // const request = req.body.response;
-  // const string64 = Buffer.from(request, 'base64').toString('ascii')
-  // const data = JSON.parse(string64)
-  // console.log(data)
+
+  const request = req.body.response;
+  const string64 = Buffer.from(request, 'base64').toString('ascii')
+  const data = JSON.parse(string64)
+  console.log(data)
 
       // const clientId = req.body.userId;
       // const destinationEmail = req.body.email;
