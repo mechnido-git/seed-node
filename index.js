@@ -85,6 +85,7 @@ app.post("/order", async (req, res) => {
         type: "PAY_PAGE"
       }
     }
+    console.log(req.body.email)
 
     await addDoc(collection(db, "transactions"), {
       amount: amount / 100,
@@ -137,7 +138,9 @@ app.get("/", (req, res) => {
 app.post("/verify", async (req, res) => {
 
 try {
+
   const request = req.body.response;
+  console.log(request);
   const string64 = Buffer.from(request, 'base64').toString('ascii')
   const data = JSON.parse(string64)
   console.log(data)
