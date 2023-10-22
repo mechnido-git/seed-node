@@ -194,13 +194,13 @@ try {
           {
             item: order.name,
             quantity: 1,
-            amountSum: order.amount / 100,
-            subtotal: order.amount / 100,
+            amountSum: order.amount,
+            subtotal: order.amount,
           },
         ],
         invoiceNumber,
-        paid: order.amount / 100,
-        subtotal: order.amount / 100,
+        paid: order.amount,
+        subtotal: order.amount,
       };
 
       await generateInvoicePdf(invoiceDetails, filePath, after, res);
