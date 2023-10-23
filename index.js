@@ -122,7 +122,7 @@ app.post("/order", async (req, res) => {
         "X-VERIFY": xverify,
       }
     };
-    const url = "https://api-preprod.phonepe.com/apis/pg-sandbox/pg/v1/pay"
+    const url = process.env.PHONEPE
 
     //request body
     const pay = {
