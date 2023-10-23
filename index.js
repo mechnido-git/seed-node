@@ -80,7 +80,7 @@ app.post("/order", async (req, res) => {
       merchantTransactionId: mti,
       merchantUserId: req.body.userId,
       amount: amount,
-      redirectUrl: process.env.CLIENT + "/#/menu/processing",
+      redirectUrl: process.env.CLIENT + "/#/processing",
       redirectMode: "REDIRECT",
       callbackUrl: process.env.SERVER + "/verify",
       paymentInstrument: {
