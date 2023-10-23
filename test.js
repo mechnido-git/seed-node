@@ -1,9 +1,20 @@
 const { generateInvoicePdf } = require("./utils/pdf-generator");
-const path = require("path")
 const fs = require("fs")
 const ShortUniqueId = require('short-unique-id');
 const crypto = require('crypto')
 const axios = require('axios');
+const { sendGmail } = require("./utils/email-sender");
+
+const { initializeApp } = require("firebase/app");
+const { firebaseConfig } = require("./config");
+const {
+  doc,
+  getDoc,
+  getFirestore,
+} = require("firebase/firestore");
+
+initializeApp(firebaseConfig);
+const db = getFirestore();
 
 const foo = async () => {
   const clientId = "hello"
@@ -120,4 +131,26 @@ axios
   });
 }
 
-foo()
+const sendEmail = async()=>{
+  try {
+    // const emailHTML = fs.readFileSync('./tnkc.html', 'utf8');
+    const event = doc(db, "events", 'hUaPM58nSpDcAbUNXSf7');
+    const eventData = await getDoc(event)
+    const emailHTML = eventData.data().emailHTML
+
+    await sendGmail('mail4mishal@gmail.com', `${emailHTML}`, "event mail")
+  } catch (error) {
+    console.log(error);
+  }
+}
+
+//tesing functions =================>
+
+//1.Testing pdf
+//foo()
+
+//2.Testing phonepe payment
+//genHash()
+
+//3.Testing Email
+sendEmail()

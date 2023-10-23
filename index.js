@@ -532,37 +532,12 @@ app.post("/register-verify", async (req, res) => {
 
     const files = [filePath];
 
+    //this email is for tnkc only
+    const eventData = await getDoc(event)
+    const emailHTML = eventData.data().emailHTML
+
     await sendGmail(
-      destinationEmail,
-      `
-            <!-- HTML Codes by Quackit.com -->
-            <!DOCTYPE html>
-            <title>Text Example</title>
-            <style>
-            div.container {
-            background-color: #ffffff;
-            }
-            div.container p {
-            font-family: Arial;
-            font-size: 14px;
-            font-style: normal;
-            font-weight: normal;
-            text-decoration: none;
-            text-transform: none;
-            color: #000000;
-            background-color: #ffffff;
-            }
-            </style>
-  
-            <div class="container">
-            <p>Hello,</p>
-            <p></p>
-            <p>I hope everything is good from your side. As per our session no. <b>${invoiceNumber}</b> , please find below the invoice.</p>
-            <p>Thanks.</p>
-            <p><b>Note -> This is an automatic email.</b>
-            </div>
-            
-            `,
+      destinationEmail,`${emailHTML}`,
       `Invoice: ${invoiceNumber}`,
       files
     );
