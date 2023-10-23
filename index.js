@@ -512,7 +512,7 @@ app.post("/register-verify", async (req, res) => {
       userId: order.userId,
       eventId: order.eventId,
       teamName: order.teamName,
-      teamEmail: order.teamEmail,
+      teamEmail: order.email,
       teamMembers: order.teamMembers,
       capName: order.capName,
       kartType: order.kartType,
