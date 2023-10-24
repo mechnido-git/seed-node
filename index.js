@@ -237,13 +237,14 @@ app.post("/verify", async (req, res) => {
         {
           item: order.name,
           quantity: 1,
-          amountSum: order.amount,
+          amount: order.amount,
           subtotal: order.amount,
         },
       ],
       invoiceNumber,
       paid: order.amount,
       subtotal: order.amount,
+      transactionId: data.data.merchantTransactionId
     };
 
     //genarting invoice pdf
@@ -518,7 +519,7 @@ app.post("/register-verify", async (req, res) => {
         {
           item: order.name,
           quantity: 1,
-          amountSum: order.amount,
+          amount: order.amount,
           subtotal: order.amount,
         },
       ],
