@@ -25,7 +25,7 @@ async function generateInvoicePdf(invoice, path, done, res) {
 
 function generateHeader(doc) {
     doc
-        .image("logo.png", 50, 45, { width: 200 })
+        .image("logo.png", 50, 45, { width: 220 })
         .fillColor("#444444")
         .fontSize(30)
         .font("Helvetica-Bold")
@@ -38,23 +38,24 @@ function generateHeader(doc) {
 
 function generateCustomerInformation(doc, invoice) {
 
-    const customerInformationTop = 150;
+    const customerInformationTop = 110;
 
     doc
         .fontSize(10)
         .text("Invoice no:", 50, customerInformationTop)
-        .font("Helvetica-Bold")
         .text(invoice.invoiceNumber, 150, customerInformationTop)
+        .text("Transcation ID:", 50, customerInformationTop + 15)
+        .text(invoice.transactionId, 150, customerInformationTop + 15)
         .font("Helvetica")
-        .text("Invoice Date:", 50, customerInformationTop + 15)
-        .text(formatDate(new Date()), 150, customerInformationTop + 15)
-        .text("Balance Due:", 50, customerInformationTop + 30)
+        .text("Invoice Date:", 50, customerInformationTop + 30)
+        .text(formatDate(new Date()), 150, customerInformationTop + 30)
+        .text("Balance Due:", 50, customerInformationTop + 45)
         .text(
             formatCurrency(invoice.subtotal - invoice.paid),
             150,
-            customerInformationTop + 30
+            customerInformationTop + 45
         )
-        .image("mech_logo.png", 450, 120, { width: 120 })
+        .image("mech_logo.png", 440, 80, {width: 120, align: "right" })
         // .text("Name:", 50, customerInformationTop + 45)
         //  .font("Helvetica-Bold")
         // .text(invoice.client.name, 150, customerInformationTop + 45)
@@ -71,30 +72,31 @@ function generateCustomerInformation(doc, invoice) {
         // )
         .moveDown();
 
-    generateHr(doc, 200);
+    generateHr(doc, 175);
     doc
         .fontSize(10)
         .font("Helvetica-Bold")
-        .text("Recipient details:", 50, 210)
+        .text("Recipient details:", 50, 185)
         .font("Helvetica")
-        .text(invoice.client.name, 50, 225)
-        .text(invoice.client.email, 50, 240)
-        .text(invoice.client.college, 50, 255)
-        .text(invoice.client.phone, 50, 270)
+        .text(invoice.client.name, 50, 200)
+        .text(invoice.client.email, 50, 215)
+        .text(invoice.client.college, 50, 230)
+        .text(invoice.client.phone, 50, 245)
         .font("Helvetica-Bold")
-        .text("MECHNIDO", 490, 210)
+        .text("MECHNIDO", 490, 185)
         .font("Helvetica")
-        .text("Coimbatore", 490, 225)
-        .text("GSTIN No: 33ABKFM0821E1ZQ", 400, 240)
-        .text("PAN No: ABKFM0821E", 440, 255)
-        .text("Mail : support@mseed.in", 432, 270)
+        .text("Coimbatore", 490, 200)
+        .text("GSTIN No: 33ABKFM0821E1ZQ", 400, 215)
+        .text("PAN No: ABKFM0821E", 440, 230)
+        .text("Mail : support@mseed.in", 432, 245)
 
-    generateHr(doc, 290);
+    generateHr(doc, 265);
 }
 
 function generateInvoiceTable(doc, invoice) {
+    generateHr(doc, 285, 1.5, '#666666');
     let i;
-    const invoiceTableTop = 330;
+    const invoiceTableTop = 295;
     const { client } = invoice;
     const { pricePerSession } = client;
 
@@ -103,12 +105,12 @@ function generateInvoiceTable(doc, invoice) {
         doc,
         invoiceTableTop,
         "Item",
-        "Description",
-        "Cost",
-
-
+        "HSN Code",
+        "Unit",
+        "Unit Price",
+        "Total"
     );
-    generateHr(doc, invoiceTableTop + 20);
+    generateHr(doc, invoiceTableTop + 20, 1.5, '#666666');
     doc.font("Helvetica");
 
     for (i = 0; i < invoice.items.length; i++) {
@@ -118,14 +120,17 @@ function generateInvoiceTable(doc, invoice) {
             doc,
             position,
             item.item,
-            item.description,
-            formatCurrency(item.amountSum)
+            item.hsncode,
+            item.quantity,
+            item.amount,
+            formatCurrency(item.amount * item.quantity)
         );
 
-        generateHr(doc, position + 20);
+        generateHr(doc, position + 20, 1.5, '#666666');
     }
 
     const subtotalPosition = invoiceTableTop + (i + 1) * 30;
+    doc.font('Helvetica-Bold')
     generateTableRow(
         doc,
         subtotalPosition,
@@ -159,30 +164,32 @@ function generateInvoiceTable(doc, invoice) {
         formatCurrency(invoice.subtotal - invoice.paid)
     );
     doc.font("Helvetica");
+    doc.fillColor('#aaaaaa')
+    .text("This is a system generated invoice and does not require a signature or a digital signature , India ", 50, duePosition + 100, {align: "center"})
 }
 
 function generateTableRow(
     doc,
     y,
     item,
-    description,
-    unitCost,
-    quantity,
-    lineTotal
+    hsncode,
+    unit,
+    unitPrice,
+    total
 ) {
     doc
         .fontSize(10)
-        .text(item, 50, y)
-        .text(description, 150, y)
-        .text(unitCost, 280, y, { width: 90, align: "right" })
-        .text(quantity, 370, y, { width: 90, align: "right" })
-        .text(lineTotal, 0, y, { align: "right" });
+        .text(item, 60, y)
+        .text(hsncode, 210, y,  { width: 90, align: "right" })
+        .text(unit, 280, y, { width: 90, align: "right" })
+        .text(unitPrice, 370, y, { width: 90, align: "right" })
+        .text(total, 0, y, {align: "right"});
 }
 
-function generateHr(doc, y) {
+function generateHr(doc, y, width=1, color="#aaaaaa") {
     doc
-        .strokeColor("#aaaaaa")
-        .lineWidth(1)
+        .strokeColor(color)
+        .lineWidth(width)
         .moveTo(50, y)
         .lineTo(550, y)
         .stroke();

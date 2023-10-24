@@ -31,10 +31,10 @@ initializeApp(firebaseConfig);
 const {
   getStorage,
   ref,
-  uploadBytesResumable,
   getDownloadURL,
   uploadString,
 } = require("firebase/storage");
+
 const ShortUniqueId = require("short-unique-id");
 
 const uid = new ShortUniqueId({
@@ -44,6 +44,7 @@ const uid = new ShortUniqueId({
 
 const storage = getStorage();
 const db = getFirestore();
+const hash = crypto.createHash('sha256');
 
 app.use(cors());
 
@@ -123,7 +124,7 @@ app.post("/order", async (req, res) => {
         "X-VERIFY": xverify,
       }
     };
-    const url = process.env.PHONEPE
+    const url = process.env.PHONEPE+"/pg/v1/pay"
 
     //request body
     const pay = {
@@ -167,7 +168,7 @@ app.post("/verify", async (req, res) => {
     const destinationEmail = order.email;
 
     //setting the data for the invoice pdf
-    const invoiceNumber = uid.rnd();
+    const invoiceNumber = 'N-10064'+uid.rnd();
     //display college/phone if it is in the database
     let college = "";
     let phone = "";
@@ -292,7 +293,7 @@ app.post("/verify", async (req, res) => {
 
               `,
       `Invoice: ${invoiceNumber}`,
-      files
+      filePath
     );
   } catch (error) {
     console.log(error)
@@ -369,7 +370,6 @@ app.post("/register", async (req, res) => {
 
     //genrating hash for the phonepe payment initiation
     const code = payload + "/pg/v1/pay" + key
-    var hash = crypto.createHash('sha256');
     originalValue = hash.update(code, 'utf-8');
     hashValue = originalValue.digest('hex');
     const xverify = hashValue + "###" + index
@@ -382,7 +382,7 @@ app.post("/register", async (req, res) => {
         "X-VERIFY": xverify,
       }
     };
-    const url = process.env.PHONEPE
+    const url = process.env.PHONEPE+"/pg/v1/pay"
 
     //request body
     const pay = {
@@ -408,6 +408,31 @@ app.post("/register-verify", async (req, res) => {
     const string64 = Buffer.from(request, 'base64').toString('ascii')
     const data = JSON.parse(string64)
 
+    //checking status of the payment
+    const endPoint = `/pg/v1/status/${process.env.MERCHID}/${data.data.merchantTransactionId}`
+    const code = endPoint + process.env.MERCHKEY
+    originalValue = hash.update(code, 'utf-8');
+    hashValue = originalValue.digest('hex');
+    const xverify = hashValue + "###" + process.env.MERCHINDEX
+    
+    const url = process.env.PHONEPE+endPoint
+
+    const config = {
+      headers: {
+        accept: 'application/json',
+        "Content-Type": "application/json",
+        "X-VERIFY": xverify,
+        "X-MERCHANT-ID": process.env.MERCHID
+      }
+    };
+    const response = await axios.post(url, {}, config)
+
+    if(!response.data.success) return res.status(500).json({
+      code: response.data.code,
+      message: response.data.message,
+      discription: response.data.data.responseCodeDescription  
+    });
+
     //checking for the transaction details initiated by the client and mathing the current transaction id that recieved
     const q = query(collection(db, "transactions"), where("transactionId", "==", data.data.merchantTransactionId));
     let order = false
@@ -422,7 +447,7 @@ app.post("/register-verify", async (req, res) => {
     const destinationEmail = order.email;
 
     //setting the data for the invoice pdf
-    const invoiceNumber = uid.rnd();
+    const invoiceNumber = 'N-10064'+uid.rnd();
     //display college/phone if it is in the database
     let college = "";
     let phone = "";
@@ -466,6 +491,7 @@ app.post("/register-verify", async (req, res) => {
       invoiceNumber,
       paid: order.amount,
       subtotal: order.amount,
+      transactionId: response.data.data.transactionId
     };
 
     //genarting invoice pdf
@@ -530,8 +556,6 @@ app.post("/register-verify", async (req, res) => {
     response = { signatureIsValid: "true" };
     res.json({ response });
 
-    const files = [filePath];
-
     //this email is for tnkc only
     const eventData = await getDoc(event)
     const emailHTML = eventData.data().emailHTML
@@ -539,7 +563,7 @@ app.post("/register-verify", async (req, res) => {
     await sendGmail(
       destinationEmail,`${emailHTML}`,
       `Invoice: ${invoiceNumber}`,
-      files
+      filePath
     );
 
   } catch (error) {
