@@ -134,13 +134,13 @@ axios
 
 const sendEmail = async()=>{
   try {
-    const files = '/home/mishal/repo/seed-node/tnkc.html'
-    const emailHTML = fs.readFileSync('./tnkc.html', 'utf8');
+    // const files = '/home/mishal/repo/seed-node/tnkc.html'
+    const emailHTML = fs.readFileSync('./welcom.html', 'utf8');
     // const event = doc(db, "events", 'hUaPM58nSpDcAbUNXSf7');
     // const eventData = await getDoc(event)
     // const emailHTML = eventData.data().emailHTML
 
-    await sendGmail('mail4mishal@gmail.com', `${emailHTML}`, "event mail", files)
+    await sendGmail('mail4mishal@gmail.com', `${emailHTML}`, "event mail")
   } catch (error) {
     console.log(error);
   }
@@ -149,10 +149,10 @@ const sendEmail = async()=>{
 //tesing functions =================>
 
 //1.Testing pdf
-foo()
+// foo()
 
 //2.Testing phonepe payment
 //genHash()
 
 //3.Testing Email
-// sendEmail()
+sendEmail()

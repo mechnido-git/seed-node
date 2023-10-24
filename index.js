@@ -8,7 +8,7 @@ const axios = require('axios');
 const shortId = require('shortid')
 
 const { generateInvoicePdf } = require("./utils/pdf-generator");
-const { sendGmail } = require("./utils/email-sender");
+const { sendGmail } = require("./utils/send-email");
 
 const { initializeApp } = require("firebase/app");
 const { firebaseConfig } = require("./config");
@@ -597,8 +597,21 @@ app.post("/register-verify", async (req, res) => {
   }
 });
 
-app.get('/send-register-email', (res, res) => {
+app.post('/send-register-email', async (res, res) => {
+  try {
+    if (!req.body.email) return res.status(401).json({ error: "bad request" })
 
+    const emailHTML = fs.readFileSync('./welcom.html', 'utf8');
+
+    await sendGmail(
+      req.body.email,
+      `${emailHTML}`,
+      'Welcome to Seed'
+    )
+    return res.status(200).json({ success: true })
+  } catch (error) {
+    return res.status(500).json({ error })
+  }
 })
 
 app.listen(4242, () => console.log("Running on port 4242"));
