@@ -171,7 +171,10 @@ app.post("/verify", async (req, res) => {
         "X-MERCHANT-ID": process.env.MERCHID
       }
     };
-    const response = await axios.post(url, {}, config)
+    const response = await axios.post(url, {
+      merchantId: process.env.MERCHID,
+      merchantTransactionId: data.data.merchantTransactionId
+    }, config)
 
     if (!response.data.success) return res.status(500).json({
       code: response.data.code,
