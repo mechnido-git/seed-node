@@ -178,12 +178,12 @@ app.post("/verify", async (req, res) => {
       data: payload
     };
 
-    const response = await axios.get(url, config)
+    const status = await axios.get(url, config)
 
-    if (!response.data.success) return res.status(500).json({
-      code: response.data.code,
-      message: response.data.message,
-      discription: response.data.data.responseCodeDescription
+    if (!status.data.success) return res.status(500).json({
+      code: status.data.code,
+      message: status.data.message,
+      discription: status.data.data.responseCodeDescription
     });
 
     //checking for the transaction details initiated by the client and mathing the current transaction id that recieved
