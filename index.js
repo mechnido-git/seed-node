@@ -165,6 +165,7 @@ app.post("/verify", async (req, res) => {
 
     const config = {
       headers: {
+        accept: 'application/json',
         "Content-Type": "application/json",
         "X-VERIFY": xverify,
         "X-MERCHANT-ID": process.env.MERCHID
