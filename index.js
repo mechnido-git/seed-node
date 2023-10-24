@@ -44,7 +44,6 @@ const uid = new ShortUniqueId({
 
 const storage = getStorage();
 const db = getFirestore();
-const hash = crypto.createHash('sha256');
 
 app.use(cors());
 
@@ -157,6 +156,7 @@ app.post("/verify", async (req, res) => {
     //checking status of the payment
     const endPoint = `/pg/v1/status/${process.env.MERCHID}/${data.data.merchantTransactionId}`
     const code = endPoint + process.env.MERCHKEY
+    const hash = crypto.createHash('sha256');
     originalValue = hash.update(code, 'utf-8');
     hashValue = originalValue.digest('hex');
     const xverify = hashValue + "###" + process.env.MERCHINDEX
@@ -402,6 +402,7 @@ app.post("/register", async (req, res) => {
 
     //genrating hash for the phonepe payment initiation
     const code = payload + "/pg/v1/pay" + key
+    const hash = crypto.createHash('sha256');
     originalValue = hash.update(code, 'utf-8');
     hashValue = originalValue.digest('hex');
     const xverify = hashValue + "###" + index
@@ -443,6 +444,7 @@ app.post("/register-verify", async (req, res) => {
     //checking status of the payment
     const endPoint = `/pg/v1/status/${process.env.MERCHID}/${data.data.merchantTransactionId}`
     const code = endPoint + process.env.MERCHKEY
+    const hash = crypto.createHash('sha256');
     originalValue = hash.update(code, 'utf-8');
     hashValue = originalValue.digest('hex');
     const xverify = hashValue + "###" + process.env.MERCHINDEX
