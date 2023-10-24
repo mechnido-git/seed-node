@@ -165,13 +165,12 @@ app.post("/verify", async (req, res) => {
 
     const config = {
       headers: {
-        accept: 'application/json',
         "Content-Type": "application/json",
         "X-VERIFY": xverify,
         "X-MERCHANT-ID": process.env.MERCHID
       }
     };
-    const response = await axios.post(url, {
+    const response = await axios.get(url, {
       merchantId: process.env.MERCHID,
       merchantTransactionId: data.data.merchantTransactionId
     }, config)
