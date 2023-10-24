@@ -124,7 +124,7 @@ app.post("/order", async (req, res) => {
         "X-VERIFY": xverify,
       }
     };
-    const url = process.env.PHONEPE+"/pg/v1/pay"
+    const url = process.env.PHONEPE + "/pg/v1/pay"
 
     //request body
     const pay = {
@@ -154,6 +154,31 @@ app.post("/verify", async (req, res) => {
     const string64 = Buffer.from(request, 'base64').toString('ascii')
     const data = JSON.parse(string64)
 
+    //checking status of the payment
+    const endPoint = `/pg/v1/status/${process.env.MERCHID}/${data.data.merchantTransactionId}`
+    const code = endPoint + process.env.MERCHKEY
+    originalValue = hash.update(code, 'utf-8');
+    hashValue = originalValue.digest('hex');
+    const xverify = hashValue + "###" + process.env.MERCHINDEX
+
+    const url = process.env.PHONEPE + endPoint
+
+    const config = {
+      headers: {
+        accept: 'application/json',
+        "Content-Type": "application/json",
+        "X-VERIFY": xverify,
+        "X-MERCHANT-ID": process.env.MERCHID
+      }
+    };
+    const response = await axios.post(url, {}, config)
+
+    if (!response.data.success) return res.status(500).json({
+      code: response.data.code,
+      message: response.data.message,
+      discription: response.data.data.responseCodeDescription
+    });
+
     //checking for the transaction details initiated by the client and mathing the current transaction id that recieved
     const q = query(collection(db, "transactions"), where("transactionId", "==", data.data.merchantTransactionId));
     let order = false
@@ -168,7 +193,7 @@ app.post("/verify", async (req, res) => {
     const destinationEmail = order.email;
 
     //setting the data for the invoice pdf
-    const invoiceNumber = 'N-10064'+uid.rnd();
+    const invoiceNumber = 'N-10064' + uid.rnd();
     //display college/phone if it is in the database
     let college = "";
     let phone = "";
@@ -382,7 +407,7 @@ app.post("/register", async (req, res) => {
         "X-VERIFY": xverify,
       }
     };
-    const url = process.env.PHONEPE+"/pg/v1/pay"
+    const url = process.env.PHONEPE + "/pg/v1/pay"
 
     //request body
     const pay = {
@@ -414,8 +439,8 @@ app.post("/register-verify", async (req, res) => {
     originalValue = hash.update(code, 'utf-8');
     hashValue = originalValue.digest('hex');
     const xverify = hashValue + "###" + process.env.MERCHINDEX
-    
-    const url = process.env.PHONEPE+endPoint
+
+    const url = process.env.PHONEPE + endPoint
 
     const config = {
       headers: {
@@ -427,10 +452,10 @@ app.post("/register-verify", async (req, res) => {
     };
     const response = await axios.post(url, {}, config)
 
-    if(!response.data.success) return res.status(500).json({
+    if (!response.data.success) return res.status(500).json({
       code: response.data.code,
       message: response.data.message,
-      discription: response.data.data.responseCodeDescription  
+      discription: response.data.data.responseCodeDescription
     });
 
     //checking for the transaction details initiated by the client and mathing the current transaction id that recieved
@@ -447,7 +472,7 @@ app.post("/register-verify", async (req, res) => {
     const destinationEmail = order.email;
 
     //setting the data for the invoice pdf
-    const invoiceNumber = 'N-10064'+uid.rnd();
+    const invoiceNumber = 'N-10064' + uid.rnd();
     //display college/phone if it is in the database
     let college = "";
     let phone = "";
@@ -561,7 +586,7 @@ app.post("/register-verify", async (req, res) => {
     const emailHTML = eventData.data().emailHTML
 
     await sendGmail(
-      destinationEmail,`${emailHTML}`,
+      destinationEmail, `${emailHTML}`,
       `Invoice: ${invoiceNumber}`,
       filePath
     );
@@ -571,5 +596,9 @@ app.post("/register-verify", async (req, res) => {
     return res.status(500).json({ error });
   }
 });
+
+app.get('/send-register-email', (res, res) => {
+
+})
 
 app.listen(4242, () => console.log("Running on port 4242"));
