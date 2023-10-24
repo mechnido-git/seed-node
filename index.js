@@ -597,7 +597,7 @@ app.post("/register-verify", async (req, res) => {
   }
 });
 
-app.post('/send-register-email', async (res, res) => {
+app.post('/send-register-email', async (req, res) => {
   try {
     if (!req.body.email) return res.status(401).json({ error: "bad request" })
 
