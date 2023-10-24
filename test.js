@@ -146,6 +146,29 @@ const sendEmail = async()=>{
   }
 }
 
+const bar = async()=>{
+  try {
+    let data = JSON.stringify({
+      "merchantId": "PGTESTPAYUAT",
+      "merchantTransactionId": "1383465993303208461951"
+    });
+    
+    let config = {
+      headers: { 
+        'X-VERIFY': 'c19a486e948e32c9e29d26cf0f47f3aaf1ba4b29a76a19be0edcf6a422938528###1', 
+        'X-MERCHANT-ID': 'PGTESTPAYUAT', 
+        'Content-Type': 'application/json'
+      },
+      data : data
+    };
+    const url = 'https://api-preprod.phonepe.com/apis/pg-sandbox/pg/v1/status/PGTESTPAYUAT/1383465993303208461951'
+    const response = await axios.get(url, config)
+    console.log(response.data);
+  } catch (error) {
+    console.log(error);
+  }
+}
+
 //tesing functions =================>
 
 //1.Testing pdf
@@ -155,4 +178,6 @@ const sendEmail = async()=>{
 //genHash()
 
 //3.Testing Email
-sendEmail()
+// sendEmail()
+
+bar()

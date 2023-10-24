@@ -163,25 +163,22 @@ app.post("/verify", async (req, res) => {
 
     const url = process.env.PHONEPE + endPoint
 
+    const payload = JSON.stringify({
+      merchantId: process.env.MERCHID,
+      merchantTransactionId: data.data.merchantTransactionId
+    })
+
     const config = {
       headers: {
         accept: 'application/json',
         "Content-Type": "application/json",
         "X-VERIFY": xverify,
         "X-MERCHANT-ID": process.env.MERCHID
-      }
+      },
+      data: payload
     };
 
-    console.log("X_VERIFY:"+xverify)
-
-    const payload = {
-      merchantId: process.env.MERCHID,
-      merchantTransactionId: data.data.merchantTransactionId
-    }
-
-    console.log("payload:"+payload)
-
-    const response = await axios.get(url, payload, config)
+    const response = await axios.get(url, config)
 
     if (!response.data.success) return res.status(500).json({
       code: response.data.code,
