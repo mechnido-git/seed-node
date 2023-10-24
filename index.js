@@ -178,6 +178,8 @@ app.post("/verify", async (req, res) => {
       merchantTransactionId: data.data.merchantTransactionId
     }
 
+    console.log("payload:"+payload)
+
     const response = await axios.get(url, payload, config)
 
     if (!response.data.success) return res.status(500).json({
