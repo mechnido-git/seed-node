@@ -423,7 +423,7 @@ app.post("/register", async (req, res) => {
       faculty: req.body.faculty,
       type: 'event',
       fullPay: req.body.fullPay,
-      totalFee: total? total: null,
+      totalFee: total? total / 100: null,
       phase: total? req.body.phase: null
     });
 
