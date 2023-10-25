@@ -565,7 +565,7 @@ app.post("/register-verify", async (req, res) => {
       invoiceNumber,
       paid: order.phase === 2? order.totalFee: order.amount,
       subtotal: order.totalFee? order.totalFee: order.amount,
-      transactionId: response.data.data.transactionId
+      transactionId: status.data.data.transactionId
     };
 
     //genarting invoice pdf
