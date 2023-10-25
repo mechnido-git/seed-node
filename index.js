@@ -410,7 +410,8 @@ if(req.body.phase === 2){
     type: 'event',
     fullPay: req.body.fullPay,
     totalFee: total? total / 100: null,
-    phase: total? req.body.phase: null
+    phase: total? req.body.phase: null,
+    username: req.body.username,
   });
 }else{
   await addDoc(collection(db, "transactions"), {
@@ -574,8 +575,8 @@ app.post("/register-verify", async (req, res) => {
         {
           item: order.name,
           quantity: 1,
-          amount: order.amount,
-          subtotal: order.amount,
+          amount: order.totalFee? order.totalFee: order.amount,
+          subtotal: order.totalFee? order.totalFee: order.amount,
         },
       ],
       invoiceNumber,
