@@ -627,6 +627,7 @@ app.post("/register-verify", async (req, res) => {
     if(enrolled){
       let full = true
       let arr = []
+      console.log(event);
       event.forEach(item=>{
         item.enrolled.forEach((i, n)=>{
           if(i.userId === order.userId){
