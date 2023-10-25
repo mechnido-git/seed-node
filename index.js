@@ -631,7 +631,7 @@ app.post("/register-verify", async (req, res) => {
       event.forEach(item=>{
         item.data().enrolled.forEach((i, n)=>{
           if(i.userId === order.userId){
-            arr.push({...i, phase: 2})
+            arr.push({...i, phase: 2, invoice: downloadURL,})
           }else{
             arr.push(i)
           }
