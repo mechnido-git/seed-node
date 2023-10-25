@@ -342,17 +342,46 @@ const getRegisterFee = async (id) => {
       console.log("No such document!");
     } else {
       console.log("Document data:", docSnap.data().registerFee);
+      return parseInt(docSnap.data().registerFee * 100);
     }
-    return parseInt(docSnap.data().registerFee * 100);
   } catch (error) {
     console.log(error);
   }
 };
 
+const getDue = async(id, phase) => {
+  console.log(phase);
+  try {
+    const cityRef = doc(db, "events", id);
+    const docSnap = await getDoc(cityRef);
+    if (!docSnap.exists) {
+      console.log("No such document!");
+    } else {
+      console.log("Document data:", docSnap.data().phase1num);
+      switch(phase){
+        case 1: return parseInt(docSnap.data().phase1num * 100);
+        case 2: return parseInt(docSnap.data().phase2num * 100);
+        default: return
+      }
+    }
+  } catch (error) {
+    console.log(error);
+  }
+}
+
 app.post("/register", async (req, res) => {
   try {
     const mti = uid.rnd() //merchend transaction ID
-    const fee = await getRegisterFee(req.body.eventId);
+    let fee;
+    let total = false
+    if(req.body.fullPay){
+      fee = await getRegisterFee(req.body.eventId);
+    }else{
+      fee = await getDue(req.body.eventId, req.body.phase)
+      total = await getRegisterFee(req.body.eventId);
+    }
+
+    console.log("fee:"+fee);
 
     //setting data as in the phonepe documentation
     const data =
@@ -391,7 +420,10 @@ app.post("/register", async (req, res) => {
       pincode: req.body.pincode,
       members: req.body.members,
       faculty: req.body.faculty,
-      type: 'event'
+      type: 'event',
+      fullPay: req.body.fullPay,
+      totalFee: total? total: null,
+      phase: total? req.body.phase: null
     });
 
     const key = process.env.MERCHKEY
@@ -452,20 +484,27 @@ app.post("/register-verify", async (req, res) => {
 
     const url = process.env.PHONEPE + endPoint
 
+    const payload = JSON.stringify({
+      merchantId: process.env.MERCHID,
+      merchantTransactionId: data.data.merchantTransactionId
+    })
+
     const config = {
       headers: {
         accept: 'application/json',
         "Content-Type": "application/json",
         "X-VERIFY": xverify,
         "X-MERCHANT-ID": process.env.MERCHID
-      }
+      },
+      data: payload
     };
-    const response = await axios.post(url, {}, config)
 
-    if (!response.data.success) return res.status(500).json({
-      code: response.data.code,
-      message: response.data.message,
-      discription: response.data.data.responseCodeDescription
+    const status = await axios.get(url, config)
+
+    if (!status.data.success) return res.status(500).json({
+      code: status.data.code,
+      message: status.data.message,
+      discription: status.data.data.responseCodeDescription
     });
 
     //checking for the transaction details initiated by the client and mathing the current transaction id that recieved
@@ -524,8 +563,8 @@ app.post("/register-verify", async (req, res) => {
         },
       ],
       invoiceNumber,
-      paid: order.amount,
-      subtotal: order.amount,
+      paid: order.phase === 2? order.totalFee: order.amount,
+      subtotal: order.totalFee? order.totalFee: order.amount,
       transactionId: response.data.data.transactionId
     };
 
@@ -549,6 +588,8 @@ app.post("/register-verify", async (req, res) => {
       amount: order.amount / 100,
       invoice: downloadURL,
       item: "event",
+      fullPay: order.fullPay,
+      phase: order.fullPay? null: order.phase,
       itemName: order.name,
       transactionId: order.transactionId,
       satus: "purchased",
@@ -557,42 +598,72 @@ app.post("/register-verify", async (req, res) => {
       timestamp: serverTimestamp(),
     });
 
-    const event = doc(db, "events", order.eventId);
-    await updateDoc(event, {
-      enrolled: arrayUnion({
+    const eventRef = doc(db, "events", order.eventId);
+    const qe = query(collection(db, "events"), where("enrolled_arr", "array-contains", order.userId));
+    const event = await getDocs(qe)
+
+    let enrolled = false;
+    event.forEach(item=>{
+      enrolled = true
+    })
+
+    if(enrolled){
+      let full = true
+      let arr = []
+      event.forEach(item=>{
+        item.enrolled.forEach((i, n)=>{
+          if(i.userId === order.userId){
+            arr.push({...i, phase: 2})
+          }else{
+            arr.push(i)
+          }
+        })
+      })
+
+      await updateDoc(eventRef, {
+        enrolled: arr
+      })
+
+    }else{
+      await updateDoc(eventRef, {
+        enrolled: arrayUnion({
+          userId: order.userId,
+          invoice: downloadURL,
+          fullPay: order.fullPay,
+          phase: order.fullPay? null: order.phase
+        }),
+      });
+
+      await updateDoc(eventRef, {
+        enrolled_arr: arrayUnion(order.userId),
+      });
+
+      await addDoc(collection(db, "enrolled"), {
         userId: order.userId,
-        invoice: downloadURL,
-      }),
-    });
+        eventId: order.eventId,
+        teamName: order.teamName,
+        teamEmail: order.email,
+        teamMembers: order.teamMembers,
+        capName: order.capName,
+        kartType: order.kartType,
+        contact: order.contact,
+        collegeName: order.collegeName,
+        fac: order.fac,
+        adress: order.adress,
+        city: order.city,
+        state: order.state,
+        pincode: order.pincode,
+        members: order.members,
+        faculty: order.faculty
+      });
 
-    await updateDoc(event, {
-      enrolled_arr: arrayUnion(order.userId),
-    });
-
-    await addDoc(collection(db, "enrolled"), {
-      userId: order.userId,
-      eventId: order.eventId,
-      teamName: order.teamName,
-      teamEmail: order.email,
-      teamMembers: order.teamMembers,
-      capName: order.capName,
-      kartType: order.kartType,
-      contact: order.contact,
-      collegeName: order.collegeName,
-      fac: order.fac,
-      adress: order.adress,
-      city: order.city,
-      state: order.state,
-      pincode: order.pincode,
-      members: order.members,
-      faculty: order.faculty
-    });
+    }
 
     response = { signatureIsValid: "true" };
     res.json({ response });
 
     //this email is for tnkc only
-    const eventData = await getDoc(event)
+    const eventData = await getDoc(eventRef)
     const emailHTML = eventData.data().emailHTML
 
     await sendGmail(
