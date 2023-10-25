@@ -399,33 +399,48 @@ app.post("/register", async (req, res) => {
     }
 
     //storing the initiated transaction details for feature use
-    await addDoc(collection(db, "transactions"), {
-      amount: fee / 100,
-      userId: req.body.userId,
-      name: req.body.name,
-      transactionId: mti,
-      eventId: req.body.eventId,
-      email: req.body.email,
-      teamEmail: req.body.teamEmail,
-      username: req.body.username,
-      teamName: req.body.teamName,
-      teamMembers: req.body.teamMembers,
-      capName: req.body.capName,
-      kartType: req.body.kartType,
-      contact: req.body.contact,
-      collegeName: req.body.collegeName,
-      fac: req.body.fac,
-      adress: req.body.adress,
-      city: req.body.city,
-      state: req.body.state,
-      pincode: req.body.pincode,
-      members: req.body.members,
-      faculty: req.body.faculty,
-      type: 'event',
-      fullPay: req.body.fullPay,
-      totalFee: total? total / 100: null,
-      phase: total? req.body.phase: null
-    });
+if(req.body.phase === 2){
+  await addDoc(collection(db, "transactions"), {
+    amount: fee / 100,
+    userId: req.body.userId,
+    name: req.body.name,
+    transactionId: mti,
+    eventId: req.body.eventId,
+    email: req.body.email,
+    type: 'event',
+    fullPay: req.body.fullPay,
+    totalFee: total? total / 100: null,
+    phase: total? req.body.phase: null
+  });
+}else{
+  await addDoc(collection(db, "transactions"), {
+    amount: fee / 100,
+    userId: req.body.userId,
+    name: req.body.name,
+    transactionId: mti,
+    eventId: req.body.eventId,
+    email: req.body.email,
+    teamEmail: req.body.teamEmail,
+    username: req.body.username,
+    teamName: req.body.teamName,
+    teamMembers: req.body.teamMembers,
+    capName: req.body.capName,
+    kartType: req.body.kartType,
+    contact: req.body.contact,
+    collegeName: req.body.collegeName,
+    fac: req.body.fac,
+    adress: req.body.adress,
+    city: req.body.city,
+    state: req.body.state,
+    pincode: req.body.pincode,
+    members: req.body.members,
+    faculty: req.body.faculty,
+    type: 'event',
+    fullPay: req.body.fullPay,
+    totalFee: total? total / 100: null,
+    phase: total? req.body.phase: null
+  });
+}
 
     const key = process.env.MERCHKEY
     const index = process.env.MERCHINDEX
