@@ -629,7 +629,7 @@ app.post("/register-verify", async (req, res) => {
       let arr = []
       console.log(event);
       event.forEach(item=>{
-        item.enrolled.forEach((i, n)=>{
+        item.data().enrolled.forEach((i, n)=>{
           if(i.userId === order.userId){
             arr.push({...i, phase: 2})
           }else{
