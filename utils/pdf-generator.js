@@ -140,8 +140,22 @@ function generateInvoiceTable(doc, invoice) {
         "",
         formatCurrency(invoice.subtotal)
     );
+    let flag = false
+    const discount = subtotalPosition + 20;
+    if(invoice.coupen){
+        flag = true
+        generateTableRow(
+            doc,
+            subtotalPosition,
+            "",
+            "",
+            `discount ${invoice.discount}%`,
+            "",
+            formatCurrency(invoice.paid)
+        );
+    }
 
-    const paidToDatePosition = subtotalPosition + 20;
+    const paidToDatePosition = flag? discount + 20: subtotalPosition + 20;
     generateTableRow(
         doc,
         paidToDatePosition,

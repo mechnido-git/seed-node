@@ -71,7 +71,22 @@ app.post("/order", async (req, res) => {
 
   try {
     const mti = uid.rnd() //merchend transaction ID
-    const amount = await get(req.body.id, req.body.range);
+    let amount = await get(req.body.id, req.body.range);
+    let value = amount;
+    console.log(req.body.coupen);
+    let flag = false
+    let discount;
+    if(req.body.coupen){
+      const q = query(collection(db, "coupens"), where("code", "==", req.body.code.toLowerCase()));
+        const querySnapshot = await getDocs(q);
+        querySnapshot.forEach((doc) => {
+          flag = true
+          discount = doc.data().discount
+        });
+        if(flag) amount = (parseInt(amount/100) - parseInt((discount/100)* parseInt(amount/100))) * 100
+
+    }
+    console.log(amount)
 
     //setting data as in the phonepe documentation
     const data =
@@ -98,7 +113,10 @@ app.post("/order", async (req, res) => {
       email: req.body.email,
       username: req.body.username,
       range: req.body.range,
-      type: 'course'
+      type: 'course',
+      coupen: req.body.coupen,
+      value: req.body.coupen? (value / 100): null,
+      discount: req.body.coupen? discount: null,
     });
 
     const key = process.env.MERCHKEY
@@ -237,14 +255,16 @@ app.post("/verify", async (req, res) => {
         {
           item: order.name,
           quantity: 1,
-          amount: order.amount,
-          subtotal: order.amount,
+          amount: order.coupen? order.value: order.amount,
+          subtotal: order.coupen? order.value: order.amount,
         },
       ],
       invoiceNumber,
       paid: order.amount,
-      subtotal: order.amount,
-      transactionId: data.data.merchantTransactionId
+      subtotal: order.coupen? order.value: order.amount,
+      transactionId: data.data.merchantTransactionId,
+      coupen: order.coupen,
+      discount: order.coupen? order.discount: null,
     };
 
     //genarting invoice pdf
