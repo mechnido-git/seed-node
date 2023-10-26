@@ -146,7 +146,7 @@ function generateInvoiceTable(doc, invoice) {
         flag = true
         generateTableRow(
             doc,
-            subtotalPosition,
+            discount,
             "",
             "",
             `discount ${invoice.discount}%`,
