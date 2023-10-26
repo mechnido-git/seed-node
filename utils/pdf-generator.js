@@ -175,7 +175,7 @@ function generateInvoiceTable(doc, invoice) {
         "",
         "Balance Due",
         "",
-        formatCurrency(invoice.subtotal - invoice.paid)
+        formatCurrency(invoice.coupen? 0 :invoice.subtotal - invoice.paid)
     );
     doc.font("Helvetica");
     doc.fillColor('#aaaaaa')
