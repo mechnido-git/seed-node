@@ -51,7 +51,7 @@ function generateCustomerInformation(doc, invoice) {
         .text(formatDate(new Date()), 150, customerInformationTop + 30)
         .text("Balance Due:", 50, customerInformationTop + 45)
         .text(
-            formatCurrency(invoice.fullPay? 0 :invoice.subtotal - invoice.paid),
+            formatCurrency(invoice.fullPay? 0 :invoice.total - invoice.paid),
             150,
             customerInformationTop + 45
         )
