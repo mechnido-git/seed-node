@@ -429,7 +429,7 @@ app.post("/register", async (req, res) => {
       merchantId: process.env.MERCHID,
       merchantTransactionId: mti,
       merchantUserId: req.body.userId,
-      amount: fee,
+      amount: disc,
       redirectUrl: process.env.CLIENT + "/#/processing",
       redirectMode: "REDIRECT",
       callbackUrl: process.env.SERVER + "/register-verify",
