@@ -140,8 +140,21 @@ function generateInvoiceTable(doc, invoice) {
         "",
         formatCurrency(invoice.subtotal)
     );
+
+    const taxPos = subtotalPosition + 20;
+    doc.font('Helvetica-Bold')
+    generateTableRow(
+        doc,
+        taxPos,
+        "",
+        "",
+        "Tax(18%)",
+        "",
+        formatCurrency(invoice.tax)
+    );
+
     let flag = false
-    const discount = subtotalPosition + 20;
+    const discount = taxPos + 20;
     if(invoice.coupen){
         flag = true
         generateTableRow(
@@ -151,11 +164,11 @@ function generateInvoiceTable(doc, invoice) {
             "",
             `discount ${invoice.discount}%`,
             "",
-            formatCurrency(invoice.paid)
+            formatCurrency(invoice.paid - invoice.discAm)
         );
     }
 
-    const paidToDatePosition = flag? discount + 20: subtotalPosition + 20;
+    const paidToDatePosition = flag? discount + 20: taxPos + 20;
     generateTableRow(
         doc,
         paidToDatePosition,
@@ -163,7 +176,7 @@ function generateInvoiceTable(doc, invoice) {
         "",
         "Paid To Date",
         "",
-        formatCurrency(invoice.paid)
+        formatCurrency(invoice.paid - invoice.discAm)
     );
 
     const duePosition = paidToDatePosition + 25;
@@ -175,7 +188,7 @@ function generateInvoiceTable(doc, invoice) {
         "",
         "Balance Due",
         "",
-        formatCurrency(invoice.coupen? 0 :invoice.subtotal - invoice.paid)
+        formatCurrency(invoice.fullPay? 0 :invoice.subtotal - invoice.paid)
     );
     doc.font("Helvetica");
     doc.fillColor('#aaaaaa')

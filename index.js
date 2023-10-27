@@ -72,10 +72,10 @@ app.post("/order", async (req, res) => {
   try {
     const mti = uid.rnd() //merchend transaction ID
     let amount = await get(req.body.id, req.body.range);
-    let value = amount;
     console.log(req.body.coupen);
     let flag = false
     let discount;
+    let discAm
     if(req.body.coupen){
       const q = query(collection(db, "coupens"), where("code", "==", req.body.code.toLowerCase()));
         const querySnapshot = await getDocs(q);
@@ -83,7 +83,7 @@ app.post("/order", async (req, res) => {
           flag = true
           discount = doc.data().discount
         });
-        if(flag) amount = (parseInt(amount/100) - parseInt((discount/100)* parseInt(amount/100))) * 100
+        if(flag) discAm = (parseInt(amount/100) - Math.round((discount/100)* parseInt(amount/100))) * 100
 
     }
     console.log(amount)
@@ -94,7 +94,7 @@ app.post("/order", async (req, res) => {
       merchantId: process.env.MERCHID,
       merchantTransactionId: mti,
       merchantUserId: req.body.userId,
-      amount: amount,
+      amount: amount - discAm,
       redirectUrl: process.env.CLIENT + "/#/processing",
       redirectMode: "REDIRECT",
       callbackUrl: process.env.SERVER + "/verify",
@@ -115,8 +115,9 @@ app.post("/order", async (req, res) => {
       range: req.body.range,
       type: 'course',
       coupen: req.body.coupen,
-      value: req.body.coupen? (value / 100): null,
       discount: req.body.coupen? discount: null,
+      discAm: req.body.coupen? discAm / 100: null,
+      fullPay: true,
     });
 
     const key = process.env.MERCHKEY
@@ -248,6 +249,11 @@ app.post("/verify", async (req, res) => {
       postal_code: "",
     };
 
+    let tax;
+    let wot
+      tax = (order.totalFee * 18) / 100
+      wot = order.totalFee - tax
+
     //setting other invoice details
     const invoiceDetails = {
       client,
@@ -265,6 +271,7 @@ app.post("/verify", async (req, res) => {
       transactionId: data.data.merchantTransactionId,
       coupen: order.coupen,
       discount: order.coupen? order.discount: null,
+      fullPay: true,
     };
 
     //genarting invoice pdf
@@ -394,11 +401,23 @@ app.post("/register", async (req, res) => {
     const mti = uid.rnd() //merchend transaction ID
     let fee;
     let total = false
+    let disc;
     if(req.body.fullPay){
       fee = await getRegisterFee(req.body.eventId);
     }else{
       fee = await getDue(req.body.eventId, req.body.phase)
       total = await getRegisterFee(req.body.eventId);
+    }
+
+    if(req.body.coupen){
+      const q = query(collection(db, "coupens"), where("code", "==", req.body.code.toLowerCase()));
+        const querySnapshot = await getDocs(q);
+        querySnapshot.forEach((doc) => {
+          flag = true
+          discount = doc.data().discount
+        });
+        if(flag) disc = (parseInt(fee/100) - Math.round((discount/100)* parseInt(fee/100))) * 100
+
     }
 
     console.log("fee:"+fee);
@@ -430,6 +449,9 @@ if(req.body.phase === 2){
     type: 'event',
     fullPay: req.body.fullPay,
     totalFee: total? total / 100: null,
+    coupen: req.body.coupen,
+    discount:req.body.coupen? disc: null,
+    discAm: req.body.coupen? discAm: null, 
     phase: total? req.body.phase: null,
     username: req.body.username,
   });
@@ -459,7 +481,10 @@ if(req.body.phase === 2){
     type: 'event',
     fullPay: req.body.fullPay,
     totalFee: total? total / 100: null,
-    phase: total? req.body.phase: null
+    phase: total? req.body.phase: null,
+    coupen: req.body.coupen,
+    discount:req.body.coupen? disc: null,
+    discAm: req.body.coupen? discAm: null, 
   });
 }
 
@@ -589,20 +614,35 @@ app.post("/register-verify", async (req, res) => {
     };
 
     //setting other invoice details
+    let tax;
+    let wot
+    if(order.totalFee){
+      tax = (order.totalFee * 18) / 100
+      wot = order.totalFee - tax
+    }else{
+      tax = (order.amount * 18) / 100
+      wot = order.amount - tax
+    }
     const invoiceDetails = {
       client,
       items: [
         {
           item: order.name,
           quantity: 1,
-          amount: order.totalFee? order.totalFee: order.amount,
-          subtotal: order.totalFee? order.totalFee: order.amount,
+          amount: wot,
+          subtotal: wot,
         },
       ],
       invoiceNumber,
       paid: order.phase === 2? order.totalFee: order.amount,
-      subtotal: order.totalFee? order.totalFee: order.amount,
-      transactionId: status.data.data.transactionId
+      subtotal: wot,
+      tax: tax,
+      total: order.totalFee? order.totalFee: order.amount,
+      coupen: order.coupen,
+      discount: order.coupen? order.discount: null,
+      discAm: order.coupen? order.discAm: null,
+      transactionId: status.data.data.transactionId,
+      fullPay: order.fullPay
     };
 
     //genarting invoice pdf
