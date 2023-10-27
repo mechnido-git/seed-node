@@ -161,7 +161,7 @@ function generateInvoiceTable(doc, invoice) {
         "",
         "Total",
         "",
-        formatCurrency(invoice.paid - invoice.discAm)
+        formatCurrency(invoice.paid)
     );
 
 
@@ -176,7 +176,7 @@ function generateInvoiceTable(doc, invoice) {
             "",
             `discount ${invoice.discount}%`,
             "",
-            formatCurrency(invoice.paid - invoice.discAm)
+            formatCurrency(invoice.discAm)
         );
     }
 
@@ -189,7 +189,7 @@ function generateInvoiceTable(doc, invoice) {
         "",
         "Paid To Date",
         "",
-        formatCurrency(invoice.paid - invoice.discAm)
+        formatCurrency(invoice.discAm)
     );
 
     const duePosition = paidToDatePosition + 25;
