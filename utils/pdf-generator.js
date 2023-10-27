@@ -161,7 +161,7 @@ function generateInvoiceTable(doc, invoice) {
         "",
         "Total",
         "",
-        formatCurrency(invoice.paid)
+        formatCurrency(invoice.fullPay? invoice.paid: invoice.total)
     );
 
 
@@ -201,7 +201,7 @@ function generateInvoiceTable(doc, invoice) {
         "",
         "Balance Due",
         "",
-        formatCurrency(invoice.fullPay? 0 :invoice.subtotal - invoice.paid)
+        formatCurrency(invoice.fullPay? 0 :invoice.total - invoice.paid)
     );
     doc.font("Helvetica");
     doc.fillColor('#aaaaaa')
