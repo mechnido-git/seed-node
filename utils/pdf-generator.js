@@ -153,8 +153,20 @@ function generateInvoiceTable(doc, invoice) {
         formatCurrency(invoice.tax)
     );
 
+    const total = taxPos + 20;
+    generateTableRow(
+        doc,
+        total,
+        "",
+        "",
+        "Total",
+        "",
+        formatCurrency(invoice.paid - invoice.discAm)
+    );
+
+
     let flag = false
-    const discount = taxPos + 20;
+    const discount = total + 20;
     if(invoice.coupen){
         flag = true
         generateTableRow(
@@ -168,7 +180,8 @@ function generateInvoiceTable(doc, invoice) {
         );
     }
 
-    const paidToDatePosition = flag? discount + 20: taxPos + 20;
+
+    const paidToDatePosition = flag? discount + 20: total + 20;
     generateTableRow(
         doc,
         paidToDatePosition,
