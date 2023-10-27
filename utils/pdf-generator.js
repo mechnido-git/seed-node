@@ -189,7 +189,7 @@ function generateInvoiceTable(doc, invoice) {
         "",
         "Paid To Date",
         "",
-        formatCurrency(invoice.discAm)
+        formatCurrency(invoice.coupen? invoice.discAm:invoice.paid)
     );
 
     const duePosition = paidToDatePosition + 25;
