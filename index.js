@@ -402,6 +402,7 @@ app.post("/register", async (req, res) => {
     let fee;
     let total = false
     let disc;
+    let discount;
     if(req.body.fullPay){
       fee = await getRegisterFee(req.body.eventId);
     }else{
@@ -450,8 +451,8 @@ if(req.body.phase === 2){
     fullPay: req.body.fullPay,
     totalFee: total? total / 100: null,
     coupen: req.body.coupen,
-    discount:req.body.coupen? disc: null,
-    discAm: req.body.coupen? discAm: null, 
+    discount:req.body.coupen? discount: null,
+    discAm: req.body.coupen? disc: null, 
     phase: total? req.body.phase: null,
     username: req.body.username,
   });
@@ -483,8 +484,8 @@ if(req.body.phase === 2){
     totalFee: total? total / 100: null,
     phase: total? req.body.phase: null,
     coupen: req.body.coupen,
-    discount:req.body.coupen? disc: null,
-    discAm: req.body.coupen? discAm: null, 
+    discount:req.body.coupen? discount: null,
+    discAm: req.body.coupen? disc: null, 
   });
 }
 
