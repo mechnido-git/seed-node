@@ -452,7 +452,7 @@ if(req.body.phase === 2){
     totalFee: total? total / 100: null,
     coupen: req.body.coupen,
     discount:req.body.coupen? discount: null,
-    discAm: req.body.coupen? disc: null, 
+    discAm: req.body.coupen? disc / 100: null, 
     phase: total? req.body.phase: null,
     username: req.body.username,
   });
@@ -485,7 +485,7 @@ if(req.body.phase === 2){
     phase: total? req.body.phase: null,
     coupen: req.body.coupen,
     discount:req.body.coupen? discount: null,
-    discAm: req.body.coupen? disc: null, 
+    discAm: req.body.coupen? disc / 100: null, 
   });
 }
 
