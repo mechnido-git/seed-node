@@ -94,7 +94,7 @@ app.post("/order", async (req, res) => {
       merchantId: process.env.MERCHID,
       merchantTransactionId: mti,
       merchantUserId: req.body.userId,
-      amount: amount - discAm,
+      amount: req.body.coupen? discAm: amount,
       redirectUrl: process.env.CLIENT + "/#/processing",
       redirectMode: "REDIRECT",
       callbackUrl: process.env.SERVER + "/verify",
