@@ -120,7 +120,7 @@ function generateInvoiceTable(doc, invoice) {
             doc,
             position,
             item.item,
-            item.hsncode,
+            '9992',
             item.quantity,
             item.amount,
             formatCurrency(item.amount * item.quantity)
