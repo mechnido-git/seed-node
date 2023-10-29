@@ -262,17 +262,20 @@ app.post("/verify", async (req, res) => {
         {
           item: order.name,
           quantity: 1,
-          amount: order.coupen? order.value: order.amount,
-          subtotal: order.coupen? order.value: order.amount,
+          amount: wot,
+          subtotal: wot,
         },
       ],
       invoiceNumber,
       paid: order.amount,
-      subtotal: order.coupen? order.value: order.amount,
       transactionId: data.data.merchantTransactionId,
-      coupen: order.coupen,
       discount: order.coupen? order.discount: null,
       fullPay: true,
+      subtotal: wot,
+      tax: tax,
+      total: order.totalFee? order.totalFee: order.amount,
+      coupen: order.coupen,
+      discAm: order.coupen? order.discAm: null,
     };
 
     //genarting invoice pdf
