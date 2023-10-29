@@ -87,6 +87,7 @@ app.post("/order", async (req, res) => {
 
     }
     console.log(amount)
+    console.log(discAm)
 
     //setting data as in the phonepe documentation
     const data =
