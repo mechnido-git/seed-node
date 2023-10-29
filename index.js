@@ -252,8 +252,8 @@ app.post("/verify", async (req, res) => {
 
     let tax;
     let wot
-      tax = (order.totalFee * 18) / 100
-      wot = order.totalFee - tax
+      tax = (order.amount * 18) / 100
+      wot = order.amount - tax
 
     //setting other invoice details
     const invoiceDetails = {
