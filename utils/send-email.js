@@ -25,11 +25,11 @@ const sendGmail = async (destination, body, subject, file) => {
             to: destination,
             subject: subject,
             html: body,
-            attachments: file? [
+            attachments: [
                 {
                     path: file
                 }
-            ]: null
+            ]
         };
     
         transporter.sendMail(mailOptions, function (error, info) {
