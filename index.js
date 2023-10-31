@@ -775,13 +775,13 @@ app.post("/register-verify", async (req, res) => {
           destinationEmail, `${emailHTML}`,
           ``
         );
-        const mail = getEventEmail(order.username, order.name, invoiceNumber, formatDate(new Date.now()), invoiceDetails.total - invoiceDetails.paid,data.data.paymentInstrument.type, order.dueDate)
+        const mail = getEventEmail(order.username, order.name, invoiceNumber, formatDate(new Date()), invoiceDetails.total - invoiceDetails.paid,data.data.paymentInstrument.type, order.dueDate)
         await sendGmail(
           destinationEmail, `${mail}`,
           ``
         );
       }else{
-        const mail = getEventEmail(order.username, order.name, invoiceNumber, formatDate(new Date.now()), 0,data.data.paymentInstrument.type, 0)
+        const mail = getEventEmail(order.username, order.name, invoiceNumber, formatDate(new Date()), 0,data.data.paymentInstrument.type, 0)
         await sendGmail(
           destinationEmail, `${mail}`,
           ``
