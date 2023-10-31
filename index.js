@@ -7,7 +7,7 @@ const crypto = require("crypto");
 const axios = require('axios');
 const shortId = require('shortid')
 
-const { generateInvoicePdf } = require("./utils/pdf-generator");
+const { generateInvoicePdf, formatDate } = require("./utils/pdf-generator");
 const { sendGmail } = require("./utils/send-email");
 
 const { initializeApp } = require("firebase/app");
@@ -36,6 +36,8 @@ const {
 } = require("firebase/storage");
 
 const ShortUniqueId = require("short-unique-id");
+const { getCourseEmail } = require("./emails/courseEmail");
+const { getEventEmail } = require("./emails/eventEmail");
 
 const uid = new ShortUniqueId({
   dictionary: "number",
@@ -219,8 +221,20 @@ app.post("/verify", async (req, res) => {
     // email for sending invoice
     const destinationEmail = order.email;
 
+    const idref = doc(db, "invoiceid", 'nqW2Qjz2hoo2bfwikjpF')
+    const snaps = await getDoc(idref)
+    let num;
+    if(!snaps.exists){
+      console.log("no invcoie id");
+    }else{
+      num = snaps.data().nid + 1
+      await updateDoc(idref, {
+        nid: num + 1
+      })
+    }
+
     //setting the data for the invoice pdf
-    const invoiceNumber = 'N-10064' + uid.rnd();
+    const invoiceNumber = `N-${num}`
     //display college/phone if it is in the database
     let college = "";
     let phone = "";
@@ -324,39 +338,13 @@ app.post("/verify", async (req, res) => {
 
     const files = [filePath];
 
+    const email = getCourseEmail(order.username, order.name, invoiceNumber, formatDate(new Date()))
+
     //sendign email with attached pdf invoice
     await sendGmail(
       destinationEmail,
-      `
-              <!-- HTML Codes by Quackit.com -->
-              <!DOCTYPE html>
-              <title>Text Example</title>
-              <style>
-              div.container {
-              background-color: #ffffff;
-              }
-              div.container p {
-              font-family: Arial;
-              font-size: 14px;
-              font-style: normal;
-              font-weight: normal;
-              text-decoration: none;
-              text-transform: none;
-              color: #000000;
-              background-color: #ffffff;
-              }
-              </style>
-
-              <div class="container">
-              <p>Hello,</p>
-              <p></p>
-              <p>I hope everything is good from your side. As per our session no. <b>${invoiceNumber}</b> , please find below the invoice.</p>
-              <p>Thanks.</p>
-              <p><b>Note -> This is an automatic email.</b>
-              </div>
-
-              `,
-      `Invoice: ${invoiceNumber}`,
+      `${email}`,
+      `Course Registration Confirmation & Invoice - Seed - A Unit of Mechnido.`,
       filePath
     );
   } catch (error) {
@@ -424,6 +412,14 @@ app.post("/register", async (req, res) => {
         if(flag) disc = (parseInt(fee/100) - Math.round((discount/100)* parseInt(fee/100))) * 100
 
     }
+    let dueDate;
+    const cityRef = doc(db, "events", req.body.eventId);
+    const docSnap = await getDoc(cityRef);
+    if(!docSnap.exists){
+      console.log("no date");
+    }else{
+      dueDate = docSnap.data().dueDate
+    }
 
     console.log("fee:"+fee);
 
@@ -459,6 +455,7 @@ if(req.body.phase === 2){
     discAm: req.body.coupen? disc / 100: null, 
     phase: total? req.body.phase: null,
     username: req.body.username,
+    dueDate
   });
 }else{
   await addDoc(collection(db, "transactions"), {
@@ -490,6 +487,7 @@ if(req.body.phase === 2){
     coupen: req.body.coupen,
     discount:req.body.coupen? discount: null,
     discAm: req.body.coupen? disc / 100: null, 
+    dueDate
   });
 }
 
@@ -587,8 +585,20 @@ app.post("/register-verify", async (req, res) => {
     // email for sending invoice
     const destinationEmail = order.email;
 
+    const idref = doc(db, "invoiceid", 'nqW2Qjz2hoo2bfwikjpF')
+    const snaps = await getDoc(idref)
+    let num;
+    if(!snaps.exists){
+      console.log("no invcoie id");
+    }else{
+      num = snaps.data().nid + 1
+      await updateDoc(idref, {
+        nid: num + 1
+      })
+    }
+
     //setting the data for the invoice pdf
-    const invoiceNumber = 'N-10064' + uid.rnd();
+    const invoiceNumber = `N-${num}`
     //display college/phone if it is in the database
     let college = "";
     let phone = "";
@@ -749,11 +759,35 @@ app.post("/register-verify", async (req, res) => {
     const eventData = await getDoc(eventRef)
     const emailHTML = eventData.data().emailHTML
 
-    await sendGmail(
-      destinationEmail, `${emailHTML}`,
-      `Invoice: ${invoiceNumber}`,
-      filePath
-    );
+    if(order.fullPay){
+      await sendGmail(
+        destinationEmail, `${emailHTML}`,
+        ``
+      );
+      const mail = getEventEmail(order.username, order.name, invoiceNumber, formatDate(new Date.now()), 0,data.data.paymentInstrument.type, 0)
+      await sendGmail(
+        destinationEmail, `${mail}`,
+        ``
+      );
+    }else{
+      if(order.phase == 1){
+        await sendGmail(
+          destinationEmail, `${emailHTML}`,
+          ``
+        );
+        const mail = getEventEmail(order.username, order.name, invoiceNumber, formatDate(new Date.now()), invoiceDetails.total - invoiceDetails.paid,data.data.paymentInstrument.type, order.dueDate)
+        await sendGmail(
+          destinationEmail, `${mail}`,
+          ``
+        );
+      }else{
+        const mail = getEventEmail(order.username, order.name, invoiceNumber, formatDate(new Date.now()), 0,data.data.paymentInstrument.type, 0)
+        await sendGmail(
+          destinationEmail, `${mail}`,
+          ``
+        );
+      }
+    }
 
   } catch (error) {
     console.log(error);

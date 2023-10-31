@@ -248,5 +248,5 @@ function formatDate(date) {
 }
 
 module.exports = {
-    generateInvoicePdf
+    generateInvoicePdf, formatDate
 };
