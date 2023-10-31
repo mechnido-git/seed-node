@@ -1,4 +1,4 @@
-export const getEventEmail = (name, eventName, invoiceId, invoiceDate, due, method, dueDate) => {
+const getEventEmail = (name, eventName, invoiceId, invoiceDate, due, method, dueDate) => {
     const email = ` 
     <!DOCTYPE html>
 <html lang="en">
@@ -101,3 +101,5 @@ export const getEventEmail = (name, eventName, invoiceId, invoiceDate, due, meth
 
     return email
 }
+
+module.exports = {getEventEmail}

@@ -1,4 +1,4 @@
-export const getCourseEmail = (name, courseName, invoiceId, invoiceDate) => {
+ const getCourseEmail = (name, courseName, invoiceId, invoiceDate) => {
     const email = `
     <!DOCTYPE html>
 <html lang="en">
@@ -95,3 +95,4 @@ export const getCourseEmail = (name, courseName, invoiceId, invoiceDate) => {
 
     return email
 }
+module.exports = {getCourseEmail}
