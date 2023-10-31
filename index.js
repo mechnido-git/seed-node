@@ -759,6 +759,8 @@ app.post("/register-verify", async (req, res) => {
     const eventData = await getDoc(eventRef)
     const emailHTML = eventData.data().emailHTML
 
+    const files = [filePath];
+
     if(order.fullPay){
       await sendGmail(
         destinationEmail, `${emailHTML}`,
@@ -767,7 +769,8 @@ app.post("/register-verify", async (req, res) => {
       const mail = getEventEmail(order.username, order.name, invoiceNumber, formatDate(new Date()), 0,data.data.paymentInstrument.type, 0)
       await sendGmail(
         destinationEmail, `${mail}`,
-        ``
+        `Event Registration Confirmation & Invoice - Seed - A Unit of Mechnido`,
+        filePath
       );
     }else{
       if(order.phase == 1){
@@ -778,7 +781,8 @@ app.post("/register-verify", async (req, res) => {
         const mail = getEventEmail(order.username, order.name, invoiceNumber, formatDate(new Date()), invoiceDetails.total - invoiceDetails.paid,data.data.paymentInstrument.type, order.dueDate)
         await sendGmail(
           destinationEmail, `${mail}`,
-          ``
+          `Event Registration Confirmation & Invoice - Seed - A Unit of Mechnido`,
+          filePath
         );
       }else{
         const mail = getEventEmail(order.username, order.name, invoiceNumber, formatDate(new Date()), 0,data.data.paymentInstrument.type, 0)
