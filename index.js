@@ -38,6 +38,7 @@ const {
 const ShortUniqueId = require("short-unique-id");
 const { getCourseEmail } = require("./emails/courseEmail");
 const { getEventEmail } = require("./emails/eventEmail");
+const { emailSchedule } = require("./utils/emailScheudler");
 
 const uid = new ShortUniqueId({
   dictionary: "number",
@@ -784,11 +785,20 @@ app.post("/register-verify", async (req, res) => {
           `Event Registration Confirmation & Invoice - Seed - A Unit of Mechnido`,
           filePath
         );
+        const d = order.dueDate.split("/")
+        const date = {
+          hour: 0,
+          day: d[0],
+          month: d[1],
+          year: d[2]
+        }
+        emailSchedule(date, order.eventId, order.userId, order.name, order.username, invoiceDetails.total - invoiceDetails.paid, order.dueDate, destinationEmail )
       }else{
         const mail = getEventEmail(order.username, order.name, invoiceNumber, formatDate(new Date()), 0,data.data.paymentInstrument.type, 0)
         await sendGmail(
           destinationEmail, `${mail}`,
-          ``
+          `Event Registration Confirmation & Invoice - Seed - A Unit of Mechnido`,
+          filePath
         );
       }
     }

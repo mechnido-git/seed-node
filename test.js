@@ -4,6 +4,7 @@ const ShortUniqueId = require('short-unique-id');
 const crypto = require('crypto')
 const axios = require('axios');
 const { sendGmail } = require("./utils/send-email");
+const {emailSchedule} = require("./utils/emailScheudler.js")
 
 const { initializeApp } = require("firebase/app");
 const { firebaseConfig } = require("./config");
@@ -169,6 +170,28 @@ const bar = async()=>{
   }
 }
 
+const remaindEmail = () => {
+  const date = {
+    hour: 18,
+    month: 11,
+    day: 1,
+    year: 2023
+  }
+  let eventId = "hUaPM58nSpDcAbUNXSf7"
+  let userId = "gaNS3LBaqgWpcg7QefWou4L1Id72"
+  let name = "TNKC"
+  let username = "mishal"
+  let due = 15000
+  let dueDate = "11/1/2023"
+  let destinationEmail = "mail4mishal@gmail.com"
+  console.log('started');
+  emailSchedule(date, eventId, userId, name, username, due, dueDate, destinationEmail )
+}
+
+remaindEmail()
+
+
+
 //tesing functions =================>
 
 //1.Testing pdf
@@ -180,4 +203,4 @@ const bar = async()=>{
 //3.Testing Email
 // sendEmail()
 
-bar()
+// bar()
