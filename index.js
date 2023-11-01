@@ -805,8 +805,8 @@ app.post("/register-verify", async (req, res) => {
         const d = order.dueDate.split("/")
         const date = {
           hour: 0,
-          day: parseInt(d[0]),
-          month: parseInt(d[1]),
+          day: parseInt(d[1]),
+          month: parseInt(d[0]),
           year: parseInt(d[2])
         }
         let today = {
