@@ -14,12 +14,13 @@ initializeApp(firebaseConfig);
 
 const db = getFirestore();
 
-const emailSchedule = (date, eventId, userId, eventName, name, due, duDate, destinationEmail) => {
+const emailSchedule = (date, eventId, userId, eventName, name, due, duDate, destinationEmail, paidDate) => {
     //sent email reminder before 6 hourse, 1 day, 2 day, 3day of the due date
     const hours = [6, 24, 48, 72]
     hours.forEach(h => {
         const d = getDate(date, h) //get exact date and time to schedule email
-        cron.schedule(`${41} ${d.hour} ${d.day} ${d.month} *`, async () => {
+        console.log(d);
+        cron.schedule(`${0} ${d.hour} ${d.day} ${d.month} *`, async () => {
             try {
                 let yes = await shouldSend(eventId, userId)
                 console.log(yes);
@@ -37,22 +38,19 @@ const emailSchedule = (date, eventId, userId, eventName, name, due, duDate, dest
             }
         });
         console.log("remainder scheduled before " + h + " hours");
-        console.log(`${41} ${d.hour} ${d.day} ${d.month} *`);
+        console.log(`${0} ${d.hour} ${d.day} ${d.month} *`);
     })
     let lastDate = getDate(date, hours[hours.length - 1])
-    const date = new Date();
 
-    let day = date.getDate();
-    let month = date.getMonth() + 1;
-    let year = date.getFullYear();
     let newDate = {
         hour:0,
-        month: month,
-        day: day,
-        year: year
+        month: paidDate.month,
+        day: paidDate.day,
+        year: paidDate.year
     }
     let current = getPlusDate(newDate, 168)
-    for (let i = 0; (current.month < lastDate.month && current.day <= lastDate.day && current.year <= lastDate.year); current = getPlusDate(current, 168)){
+    console.log(current.month < lastDate.month);
+    for (let i = 0; (current.month <= lastDate.month && current.day <= lastDate.day && current.year <= lastDate.year); current = getPlusDate(current, 168)){
         cron.schedule(`${0} ${current.hour} ${current.day} ${current.month} *`, async () => {
             try {
                 let yes = await shouldSend(eventId, userId)
@@ -97,51 +95,55 @@ const shouldSend = async (eventId, userId) => {
 }
 
 const getDate = (date, hours) => {
+    let d = {...date};
     for (let i = 0; i < hours; i++) {
-        if (date.hour === 0) {
-            if (date.day === 1) {
-                if (date.month === 1) {
-                    date.year = date.year - 1
-                    date.month = 12
-                    date.day = 30
-                    date.hour = 23
+        if (d.hour === 0) {
+            if (d.day === 1) {
+                if (d.month === 1) {
+                    d.year = d.year - 1
+                    d.month = 12
+                    d.day = 30
+                    d.hour = 23
+                    continue
                 }
-                date.month = date.month - 1
-                date.day = 30
-                date.hour = 23
+                d.month = d.month - 1
+                d.day = 30
+                d.hour = 23
                 continue
             }
-            date.day = date.day - 1
-            date.hour = 23
+            d.day = d.day - 1
+            d.hour = 23
             continue
         }
-        date.hour = date.hour - 1
+        d.hour = d.hour - 1
     }
-    return date
+    return d
 }
 
 const getPlusDate = (date, hours) => {
+    let d = {...date}
     for (let i = 0; i < hours; i++) {
-        if (date.hour === 23) {
-            if (date.day === 30) {
-                if (date.month === 12) {
-                    date.year = date.year + 1
-                    date.month = 1
-                    date.day = 1
-                    date.hour = 0
+        if (d.hour === 23) {
+            if (d.day === 30) {
+                if (d.month === 12) {
+                    d.year = d.year + 1
+                    d.month = 1
+                    d.day = 1
+                    d.hour = 0
+                    continue
                 }
-                date.month = date.month + 1
-                date.day = 1
-                date.hour = 0
+                d.month = d.month + 1
+                d.day = 1
+                d.hour = 0
                 continue
             }
-            date.day = date.day + 1
-            date.hour = 0
+            d.day = d.day + 1
+            d.hour = 0
             continue
         }
-        date.hour = date.hour - 1
+        d.hour = d.hour + 1
     }
-    return date
+    return d
 }
 
 module.exports = { emailSchedule }

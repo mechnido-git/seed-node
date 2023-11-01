@@ -69,6 +69,23 @@ const get = async (index, id) => {
 
 app.use(express.json());
 
+//////////////////////////////////email Schedule//////////////////////////////////////////
+
+const schedul = async () => {
+  try {
+    const querySnapshot = await getDocs(collection(db, "emails"));
+    querySnapshot.forEach((doc) => {
+      emailSchedule(doc.data().dueDateObj, doc.data().eventId, doc.data().userId, doc.data().name, doc.data().username, doc.data().dues, doc.data().dueDate, doc.data().destinationEmail, doc.data().today)
+    });
+  } catch (error) {
+    console.log(error);
+  }
+}
+
+schedul()
+
+/////////////////////////////////////////////////////////////////////////
+
 // to send the request to the phonepay initaition
 app.post("/order", async (req, res) => {
 
@@ -79,14 +96,14 @@ app.post("/order", async (req, res) => {
     let flag = false
     let discount;
     let discAm
-    if(req.body.coupen){
+    if (req.body.coupen) {
       const q = query(collection(db, "coupens"), where("code", "==", req.body.code.toLowerCase()));
-        const querySnapshot = await getDocs(q);
-        querySnapshot.forEach((doc) => {
-          flag = true
-          discount = doc.data().discount
-        });
-        if(flag) discAm = (parseInt(amount/100) - Math.round((discount/100)* parseInt(amount/100))) * 100
+      const querySnapshot = await getDocs(q);
+      querySnapshot.forEach((doc) => {
+        flag = true
+        discount = doc.data().discount
+      });
+      if (flag) discAm = (parseInt(amount / 100) - Math.round((discount / 100) * parseInt(amount / 100))) * 100
 
     }
     console.log(amount)
@@ -98,7 +115,7 @@ app.post("/order", async (req, res) => {
       merchantId: process.env.MERCHID,
       merchantTransactionId: mti,
       merchantUserId: req.body.userId,
-      amount: req.body.coupen? discAm: amount,
+      amount: req.body.coupen ? discAm : amount,
       redirectUrl: process.env.CLIENT + "/#/processing",
       redirectMode: "REDIRECT",
       callbackUrl: process.env.SERVER + "/verify",
@@ -119,8 +136,8 @@ app.post("/order", async (req, res) => {
       range: req.body.range,
       type: 'course',
       coupen: req.body.coupen,
-      discount: req.body.coupen? discount: null,
-      discAm: req.body.coupen? discAm / 100: null,
+      discount: req.body.coupen ? discount : null,
+      discAm: req.body.coupen ? discAm / 100 : null,
       fullPay: true,
     });
 
@@ -225,9 +242,9 @@ app.post("/verify", async (req, res) => {
     const idref = doc(db, "invoiceid", 'nqW2Qjz2hoo2bfwikjpF')
     const snaps = await getDoc(idref)
     let num;
-    if(!snaps.exists){
+    if (!snaps.exists) {
       console.log("no invcoie id");
-    }else{
+    } else {
       num = snaps.data().nid + 1
       await updateDoc(idref, {
         nid: num + 1
@@ -267,8 +284,8 @@ app.post("/verify", async (req, res) => {
 
     let tax;
     let wot
-      tax = (order.amount * 18) / 100
-      wot = order.amount - tax
+    tax = (order.amount * 18) / 100
+    wot = order.amount - tax
 
     //setting other invoice details
     const invoiceDetails = {
@@ -284,13 +301,13 @@ app.post("/verify", async (req, res) => {
       invoiceNumber,
       paid: order.amount,
       transactionId: data.data.merchantTransactionId,
-      discount: order.coupen? order.discount: null,
+      discount: order.coupen ? order.discount : null,
       fullPay: true,
       subtotal: wot,
       tax: tax,
-      total: order.totalFee? order.totalFee: order.amount,
+      total: order.totalFee ? order.totalFee : order.amount,
       coupen: order.coupen,
-      discAm: order.coupen? order.discAm: null,
+      discAm: order.coupen ? order.discAm : null,
     };
 
     //genarting invoice pdf
@@ -369,7 +386,7 @@ const getRegisterFee = async (id) => {
   }
 };
 
-const getDue = async(id, phase) => {
+const getDue = async (id, phase) => {
   console.log(phase);
   try {
     const cityRef = doc(db, "events", id);
@@ -378,7 +395,7 @@ const getDue = async(id, phase) => {
       console.log("No such document!");
     } else {
       console.log("Document data:", docSnap.data().phase1num);
-      switch(phase){
+      switch (phase) {
         case 1: return parseInt(docSnap.data().phase1num * 100);
         case 2: return parseInt(docSnap.data().phase2num * 100);
         default: return
@@ -396,33 +413,33 @@ app.post("/register", async (req, res) => {
     let total = false
     let disc;
     let discount;
-    if(req.body.fullPay){
+    if (req.body.fullPay) {
       fee = await getRegisterFee(req.body.eventId);
-    }else{
+    } else {
       fee = await getDue(req.body.eventId, req.body.phase)
       total = await getRegisterFee(req.body.eventId);
     }
 
-    if(req.body.coupen){
+    if (req.body.coupen) {
       const q = query(collection(db, "coupens"), where("code", "==", req.body.code.toLowerCase()));
-        const querySnapshot = await getDocs(q);
-        querySnapshot.forEach((doc) => {
-          flag = true
-          discount = doc.data().discount
-        });
-        if(flag) disc = (parseInt(fee/100) - Math.round((discount/100)* parseInt(fee/100))) * 100
+      const querySnapshot = await getDocs(q);
+      querySnapshot.forEach((doc) => {
+        flag = true
+        discount = doc.data().discount
+      });
+      if (flag) disc = (parseInt(fee / 100) - Math.round((discount / 100) * parseInt(fee / 100))) * 100
 
     }
     let dueDate;
     const cityRef = doc(db, "events", req.body.eventId);
     const docSnap = await getDoc(cityRef);
-    if(!docSnap.exists){
+    if (!docSnap.exists) {
       console.log("no date");
-    }else{
+    } else {
       dueDate = docSnap.data().dueDate
     }
 
-    console.log("fee:"+fee);
+    console.log("fee:" + fee);
 
     //setting data as in the phonepe documentation
     const data =
@@ -430,7 +447,7 @@ app.post("/register", async (req, res) => {
       merchantId: process.env.MERCHID,
       merchantTransactionId: mti,
       merchantUserId: req.body.userId,
-      amount: req.body.coupen? disc: fee,
+      amount: req.body.coupen ? disc : fee,
       redirectUrl: process.env.CLIENT + "/#/processing",
       redirectMode: "REDIRECT",
       callbackUrl: process.env.SERVER + "/register-verify",
@@ -440,57 +457,57 @@ app.post("/register", async (req, res) => {
     }
 
     //storing the initiated transaction details for feature use
-if(req.body.phase === 2){
-  await addDoc(collection(db, "transactions"), {
-    amount: fee / 100,
-    userId: req.body.userId,
-    name: req.body.name,
-    transactionId: mti,
-    eventId: req.body.eventId,
-    email: req.body.email,
-    type: 'event',
-    fullPay: req.body.fullPay,
-    totalFee: total? total / 100: null,
-    coupen: req.body.coupen,
-    discount:req.body.coupen? discount: null,
-    discAm: req.body.coupen? disc / 100: null, 
-    phase: total? req.body.phase: null,
-    username: req.body.username,
-    dueDate
-  });
-}else{
-  await addDoc(collection(db, "transactions"), {
-    amount: fee / 100,
-    userId: req.body.userId,
-    name: req.body.name,
-    transactionId: mti,
-    eventId: req.body.eventId,
-    email: req.body.email,
-    teamEmail: req.body.teamEmail,
-    username: req.body.username,
-    teamName: req.body.teamName,
-    teamMembers: req.body.teamMembers,
-    capName: req.body.capName,
-    kartType: req.body.kartType,
-    contact: req.body.contact,
-    collegeName: req.body.collegeName,
-    fac: req.body.fac,
-    adress: req.body.adress,
-    city: req.body.city,
-    state: req.body.state,
-    pincode: req.body.pincode,
-    members: req.body.members,
-    faculty: req.body.faculty,
-    type: 'event',
-    fullPay: req.body.fullPay,
-    totalFee: total? total / 100: null,
-    phase: total? req.body.phase: null,
-    coupen: req.body.coupen,
-    discount:req.body.coupen? discount: null,
-    discAm: req.body.coupen? disc / 100: null, 
-    dueDate
-  });
-}
+    if (req.body.phase === 2) {
+      await addDoc(collection(db, "transactions"), {
+        amount: fee / 100,
+        userId: req.body.userId,
+        name: req.body.name,
+        transactionId: mti,
+        eventId: req.body.eventId,
+        email: req.body.email,
+        type: 'event',
+        fullPay: req.body.fullPay,
+        totalFee: total ? total / 100 : null,
+        coupen: req.body.coupen,
+        discount: req.body.coupen ? discount : null,
+        discAm: req.body.coupen ? disc / 100 : null,
+        phase: total ? req.body.phase : null,
+        username: req.body.username,
+        dueDate
+      });
+    } else {
+      await addDoc(collection(db, "transactions"), {
+        amount: fee / 100,
+        userId: req.body.userId,
+        name: req.body.name,
+        transactionId: mti,
+        eventId: req.body.eventId,
+        email: req.body.email,
+        teamEmail: req.body.teamEmail,
+        username: req.body.username,
+        teamName: req.body.teamName,
+        teamMembers: req.body.teamMembers,
+        capName: req.body.capName,
+        kartType: req.body.kartType,
+        contact: req.body.contact,
+        collegeName: req.body.collegeName,
+        fac: req.body.fac,
+        adress: req.body.adress,
+        city: req.body.city,
+        state: req.body.state,
+        pincode: req.body.pincode,
+        members: req.body.members,
+        faculty: req.body.faculty,
+        type: 'event',
+        fullPay: req.body.fullPay,
+        totalFee: total ? total / 100 : null,
+        phase: total ? req.body.phase : null,
+        coupen: req.body.coupen,
+        discount: req.body.coupen ? discount : null,
+        discAm: req.body.coupen ? disc / 100 : null,
+        dueDate
+      });
+    }
 
     const key = process.env.MERCHKEY
     const index = process.env.MERCHINDEX
@@ -589,9 +606,9 @@ app.post("/register-verify", async (req, res) => {
     const idref = doc(db, "invoiceid", 'nqW2Qjz2hoo2bfwikjpF')
     const snaps = await getDoc(idref)
     let num;
-    if(!snaps.exists){
+    if (!snaps.exists) {
       console.log("no invcoie id");
-    }else{
+    } else {
       num = snaps.data().nid + 1
       await updateDoc(idref, {
         nid: num + 1
@@ -632,10 +649,10 @@ app.post("/register-verify", async (req, res) => {
     //setting other invoice details
     let tax;
     let wot
-    if(order.totalFee){
+    if (order.totalFee) {
       tax = (order.totalFee * 18) / 100
       wot = order.totalFee - tax
-    }else{
+    } else {
       tax = (order.amount * 18) / 100
       wot = order.amount - tax
     }
@@ -650,13 +667,13 @@ app.post("/register-verify", async (req, res) => {
         },
       ],
       invoiceNumber,
-      paid: order.phase === 2? order.totalFee: order.amount,
+      paid: order.phase === 2 ? order.totalFee : order.amount,
       subtotal: wot,
       tax: tax,
-      total: order.totalFee? order.totalFee: order.amount,
+      total: order.totalFee ? order.totalFee : order.amount,
       coupen: order.coupen,
-      discount: order.coupen? order.discount: null,
-      discAm: order.coupen? order.discAm: null,
+      discount: order.coupen ? order.discount : null,
+      discAm: order.coupen ? order.discAm : null,
       transactionId: status.data.data.transactionId,
       fullPay: order.fullPay
     };
@@ -682,7 +699,7 @@ app.post("/register-verify", async (req, res) => {
       invoice: downloadURL,
       item: "event",
       fullPay: order.fullPay,
-      phase: order.fullPay? null: order.phase,
+      phase: order.fullPay ? null : order.phase,
       itemName: order.name,
       transactionId: order.transactionId,
       satus: "purchased",
@@ -696,19 +713,19 @@ app.post("/register-verify", async (req, res) => {
     const event = await getDocs(qe)
 
     let enrolled = false;
-    event.forEach(item=>{
+    event.forEach(item => {
       enrolled = true
     })
 
-    if(enrolled){
+    if (enrolled) {
       let full = true
       let arr = []
       console.log(event);
-      event.forEach(item=>{
-        item.data().enrolled.forEach((i, n)=>{
-          if(i.userId === order.userId){
-            arr.push({...i, phase: 2, invoice: downloadURL,})
-          }else{
+      event.forEach(item => {
+        item.data().enrolled.forEach((i, n) => {
+          if (i.userId === order.userId) {
+            arr.push({ ...i, phase: 2, invoice: downloadURL, })
+          } else {
             arr.push(i)
           }
         })
@@ -718,13 +735,13 @@ app.post("/register-verify", async (req, res) => {
         enrolled: arr
       })
 
-    }else{
+    } else {
       await updateDoc(eventRef, {
         enrolled: arrayUnion({
           userId: order.userId,
           invoice: downloadURL,
           fullPay: order.fullPay,
-          phase: order.fullPay? null: order.phase
+          phase: order.fullPay ? null : order.phase
         }),
       });
 
@@ -762,24 +779,24 @@ app.post("/register-verify", async (req, res) => {
 
     const files = [filePath];
 
-    if(order.fullPay){
+    if (order.fullPay) {
       await sendGmail(
         destinationEmail, `${emailHTML}`,
         ``
       );
-      const mail = getEventEmail(order.username, order.name, invoiceNumber, formatDate(new Date()), 0,data.data.paymentInstrument.type, 0)
+      const mail = getEventEmail(order.username, order.name, invoiceNumber, formatDate(new Date()), 0, data.data.paymentInstrument.type, 0)
       await sendGmail(
         destinationEmail, `${mail}`,
         `Event Registration Confirmation & Invoice - Seed - A Unit of Mechnido`,
         filePath
       );
-    }else{
-      if(order.phase == 1){
+    } else {
+      if (order.phase == 1) {
         await sendGmail(
           destinationEmail, `${emailHTML}`,
           ``
         );
-        const mail = getEventEmail(order.username, order.name, invoiceNumber, formatDate(new Date()), invoiceDetails.total - invoiceDetails.paid,data.data.paymentInstrument.type, order.dueDate)
+        const mail = getEventEmail(order.username, order.name, invoiceNumber, formatDate(new Date()), invoiceDetails.total - invoiceDetails.paid, data.data.paymentInstrument.type, order.dueDate)
         await sendGmail(
           destinationEmail, `${mail}`,
           `Event Registration Confirmation & Invoice - Seed - A Unit of Mechnido`,
@@ -792,9 +809,26 @@ app.post("/register-verify", async (req, res) => {
           month: d[1],
           year: d[2]
         }
-        emailSchedule(date, order.eventId, order.userId, order.name, order.username, invoiceDetails.total - invoiceDetails.paid, order.dueDate, destinationEmail )
-      }else{
-        const mail = getEventEmail(order.username, order.name, invoiceNumber, formatDate(new Date()), 0,data.data.paymentInstrument.type, 0)
+        let today = {
+          hour: 0,
+          month: new Date().getMonth() + 1,
+          day: new Date().getDate(),
+          year: new Date().getFullYear()
+        }
+        await addDoc(collection(db, "email"), {
+          dueDateObj: date,
+          eventId: order.eventId,
+          userId: order.userId,
+          name: order.name,
+          username: order.username,
+          due: invoiceDetails.total - invoiceDetails.paid,
+          dueDate: order.dueDate,
+          destinationEmail: destinationEmail,
+          today: today
+        });
+        emailSchedule(date, order.eventId, order.userId, order.name, order.username, invoiceDetails.total - invoiceDetails.paid, order.dueDate, destinationEmail, today)
+      } else {
+        const mail = getEventEmail(order.username, order.name, invoiceNumber, formatDate(new Date()), 0, data.data.paymentInstrument.type, 0)
         await sendGmail(
           destinationEmail, `${mail}`,
           `Event Registration Confirmation & Invoice - Seed - A Unit of Mechnido`,

@@ -172,10 +172,15 @@ const bar = async()=>{
 
 const remaindEmail = () => {
   const date = {
-    hour: 18,
+    hour: 0,
     month: 11,
-    day: 1,
+    day: 30,
     year: 2023
+  }
+  let current = {
+    month: new Date().getMonth() + 1,
+    day: new Date().getDate(),
+    year: new Date().getFullYear()
   }
   let eventId = "hUaPM58nSpDcAbUNXSf7"
   let userId = "gaNS3LBaqgWpcg7QefWou4L1Id72"
@@ -185,7 +190,7 @@ const remaindEmail = () => {
   let dueDate = "11/1/2023"
   let destinationEmail = "mail4mishal@gmail.com"
   console.log('started');
-  emailSchedule(date, eventId, userId, name, username, due, dueDate, destinationEmail )
+  emailSchedule(date, eventId, userId, name, username, due, dueDate, destinationEmail, current)
 }
 
 remaindEmail()
