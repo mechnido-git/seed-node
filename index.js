@@ -780,9 +780,10 @@ app.post("/register-verify", async (req, res) => {
     const files = [filePath];
 
     if (order.fullPay) {
+      if(emailHTML)
       await sendGmail(
         destinationEmail, `${emailHTML}`,
-        ``
+        `${eventData.data().emailSub}`
       );
       const mail = getEventEmail(order.username, order.name, invoiceNumber, formatDate(new Date()), 0, data.data.paymentInstrument.type, 0)
       await sendGmail(
