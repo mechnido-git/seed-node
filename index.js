@@ -73,9 +73,9 @@ app.use(express.json());
 
 const schedul = async () => {
   try {
-    const querySnapshot = await getDocs(collection(db, "emails"));
+    const querySnapshot = await getDocs(collection(db, "email"));
     querySnapshot.forEach((doc) => {
-      emailSchedule(doc.data().dueDateObj, doc.data().eventId, doc.data().userId, doc.data().name, doc.data().username, doc.data().dues, doc.data().dueDate, doc.data().destinationEmail, doc.data().today)
+      emailSchedule(doc.data().dueDateObj, doc.data().eventId, doc.data().userId, doc.data().name, doc.data().username, doc.data().dues, doc.data().dueDate, doc.data().destinationEmail, doc.data().today, doc.id)
     });
   } catch (error) {
     console.log(error);
@@ -816,7 +816,7 @@ app.post("/register-verify", async (req, res) => {
           day: new Date().getDate(),
           year: new Date().getFullYear()
         }
-        await addDoc(collection(db, "email"), {
+        let sId = await addDoc(collection(db, "email"), {
           dueDateObj: date,
           eventId: order.eventId,
           userId: order.userId,
@@ -827,7 +827,7 @@ app.post("/register-verify", async (req, res) => {
           destinationEmail: destinationEmail,
           today: today
         });
-        emailSchedule(date, order.eventId, order.userId, order.name, order.username, invoiceDetails.total - invoiceDetails.paid, order.dueDate, destinationEmail, today)
+        emailSchedule(date, order.eventId, order.userId, order.name, order.username, invoiceDetails.total - invoiceDetails.paid, order.dueDate, destinationEmail, today, sId.id)
       } else {
         const mail = getEventEmail(order.username, order.name, invoiceNumber, formatDate(new Date()), 0, data.data.paymentInstrument.type, 0)
         await sendGmail(

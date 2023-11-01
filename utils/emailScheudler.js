@@ -14,7 +14,7 @@ initializeApp(firebaseConfig);
 
 const db = getFirestore();
 
-const emailSchedule = (date, eventId, userId, eventName, name, due, duDate, destinationEmail, paidDate) => {
+const emailSchedule = (date, eventId, userId, eventName, name, due, duDate, destinationEmail, paidDate, sId) => {
     //sent email reminder before 6 hourse, 1 day, 2 day, 3day of the due date
     const hours = [6, 24, 48, 72]
     hours.forEach(h => {
@@ -31,6 +31,8 @@ const emailSchedule = (date, eventId, userId, eventName, name, due, duDate, dest
                         `${email}`,
                         `Reminder: Payment Due for ${eventName} - Seed - A Unit of Mechnido`,
                     );
+                }else{
+                    await deleteDoc(doc(db, "email", sId));
                 }
                 console.log('email sent');
             } catch (error) {
