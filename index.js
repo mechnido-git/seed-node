@@ -94,8 +94,8 @@ app.post("/order", async (req, res) => {
     let amount = await get(req.body.id, req.body.range);
     console.log(req.body.coupen);
     let flag = false
-    let discount;
-    let discAm
+    let discount = null;
+    let discAm = null;
     if (req.body.coupen) {
       const q = query(collection(db, "coupens"), where("code", "==", req.body.code.toLowerCase()));
       const querySnapshot = await getDocs(q);
@@ -780,11 +780,11 @@ app.post("/register-verify", async (req, res) => {
     const files = [filePath];
 
     if (order.fullPay) {
-      if(emailHTML)
-      await sendGmail(
-        destinationEmail, `${emailHTML}`,
-        `${eventData.data().emailSub}`
-      );
+      if (emailHTML)
+        await sendGmail(
+          destinationEmail, `${emailHTML}`,
+          `${eventData.data().emailSub}`
+        );
       const mail = getEventEmail(order.username, order.name, invoiceNumber, formatDate(new Date()), 0, data.data.paymentInstrument.type, 0)
       await sendGmail(
         destinationEmail, `${mail}`,
