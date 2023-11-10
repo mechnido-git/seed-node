@@ -106,8 +106,9 @@ app.post("/order", async (req, res) => {
       if (flag) discAm = (parseInt(amount / 100) - Math.round((discount / 100) * parseInt(amount / 100))) * 100
 
     }
-    console.log(amount)
-    console.log(discAm)
+    console.log(process.env.MERCHID)
+    console.log(mti)
+    console.log(req.body.userId)
 
     //setting data as in the phonepe documentation
     const data =
