@@ -169,14 +169,14 @@ app.post("/order", async (req, res) => {
     const pay = {
       request: payload
     }
-
+    console.log('key');
     const response = await axios.post(url, pay, config)
 
     //sending the URL for the payment gateway to the client
     if (response.data.success) res.status(200).json({ url: response.data.data.instrumentResponse.redirectInfo.url })
 
   } catch (error) {
-    console.log(error.message);
+    console.log(error);
     res.status(error.response.status).json({ error: error.message });
   }
 })
