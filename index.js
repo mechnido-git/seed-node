@@ -148,8 +148,6 @@ app.post("/order", async (req, res) => {
     //convering the data to base64
     const buf = JSON.stringify(data)
     const payload = Buffer.from(buf).toString('base64');
-    console.log(data);
-    console.log(payload);
 
     //genrating hash for the phonepe payment initiation
     const code = payload + "/pg/v1/pay" + key
