@@ -148,6 +148,8 @@ app.post("/order", async (req, res) => {
     //convering the data to base64
     const buf = JSON.stringify(data)
     const payload = Buffer.from(buf).toString('base64');
+    console.log(data);
+    console.log(payload);
 
     //genrating hash for the phonepe payment initiation
     const code = payload + "/pg/v1/pay" + key
@@ -165,6 +167,9 @@ app.post("/order", async (req, res) => {
       }
     };
     const url = process.env.PHONEPE + "/pg/v1/pay"
+    console.log(data);
+    console.log(payload);
+    console.log(xverify);
 
     //request body
     const pay = {
@@ -178,7 +183,7 @@ app.post("/order", async (req, res) => {
 
   } catch (error) {
     console.log(error);
-    res.status(error.response.status).json({ error: error.message });
+    res.status(error.response.status).json({ error: error });
   }
 })
 
