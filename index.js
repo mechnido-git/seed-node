@@ -167,7 +167,7 @@ app.post("/order", async (req, res) => {
     const url = process.env.PHONEPE + "/pg/v1/pay"
     console.log(data);
     console.log(payload);
-    console.log(xverify);
+    console.log("verify=" + xverify);
 
     //request body
     const pay = {
