@@ -24,6 +24,7 @@ const {
   query,
   where,
   getDocs,
+  deleteDoc,
 } = require("firebase/firestore");
 
 initializeApp(firebaseConfig);
@@ -490,12 +491,10 @@ app.post("/register", async (req, res) => {
         teamEmail: req.body.teamEmail,
         username: req.body.username,
         teamName: req.body.teamName,
-        teamMembers: req.body.teamMembers,
         capName: req.body.capName,
         kartType: req.body.kartType,
         contact: req.body.contact,
         collegeName: req.body.collegeName,
-        fac: req.body.fac,
         adress: req.body.adress,
         city: req.body.city,
         state: req.body.state,
@@ -512,6 +511,7 @@ app.post("/register", async (req, res) => {
         dueDate
       });
     }
+
 
     const key = process.env.MERCHKEY
     const index = process.env.MERCHINDEX
@@ -758,12 +758,10 @@ app.post("/register-verify", async (req, res) => {
         eventId: order.eventId,
         teamName: order.teamName,
         teamEmail: order.teamEmail,
-        teamMembers: order.teamMembers,
         capName: order.capName,
         kartType: order.kartType,
         contact: order.contact,
         collegeName: order.collegeName,
-        fac: order.fac,
         adress: order.adress,
         city: order.city,
         state: order.state,
@@ -771,8 +769,9 @@ app.post("/register-verify", async (req, res) => {
         members: order.members,
         faculty: order.faculty
       });
-
     }
+
+    await deleteDoc(doc(db, "enrolled_temp", order.userId));
 
     response = { signatureIsValid: "true" };
     res.json({ response });
