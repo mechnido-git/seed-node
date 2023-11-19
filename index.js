@@ -556,6 +556,7 @@ app.post("/register", async (req, res) => {
 app.post("/register-verify", async (req, res) => {
 
   try {
+    console.log('test');
     //decripting the response
     const request = req.body.response;
     const string64 = Buffer.from(request, 'base64').toString('ascii')
