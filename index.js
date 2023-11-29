@@ -865,4 +865,4 @@ app.post('/send-register-email', async (req, res) => {
   }
 })
 
-app.listen(4242, () => console.log("Running on port 4242"));
+app.listen(8000, () => console.log("Running on port 8000"));
