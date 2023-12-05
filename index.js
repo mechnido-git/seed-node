@@ -865,4 +865,23 @@ app.post('/send-register-email', async (req, res) => {
   }
 })
 
+app.post("/swap", async (req, res) => {
+  try {
+    const { from, id, to } = req.body;
+
+    const cityRef = doc(db, from, id);
+    const docSnap = await getDoc(cityRef);
+    if (!docSnap.exists) {
+      console.log("No such document!");
+    } else {
+      console.log("Document data:", docSnap.data());
+      const data = docSnap.data()
+      await addDoc(collection(db, to), data);
+    }
+
+  } catch (error) {
+    return res.status(500).json({ error })
+  }
+})
+
 app.listen(4242, () => console.log("Running on port 4242"));
