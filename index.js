@@ -877,6 +877,7 @@ app.post("/swap", async (req, res) => {
       console.log("Document data:", docSnap.data());
       const data = docSnap.data()
       await addDoc(collection(db, to), data);
+      return res.status(200).json({ success: true })
     }
 
   } catch (error) {
